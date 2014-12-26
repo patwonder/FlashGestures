@@ -3,11 +3,15 @@
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="hook.h" />
+    <ClInclude Include="GestureHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="FlashGesturesHook.cpp" />
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="hook.cpp" />
+    <ClCompile Include="GestureHandler.cpp" />
+    <ClCompile Include="GestureHandlerImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FlashGesturesHook.def" />

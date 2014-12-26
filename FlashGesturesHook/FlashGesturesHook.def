@@ -1,2 +1,4 @@
 EXPORTS
-	GetMsgHook   @1
+	InstallHook   @1
+	UninstallHook   @2
+	GetMsgHook   @3

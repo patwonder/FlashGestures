@@ -27,4 +27,22 @@ var hHookDll = LoadLibrary("D:\\OpenSourceProjects\\FlashGestures\\Debug\\FlashG
 var funcGetMsgHook = GetProcAddress(hHookDll, "GetMsgHook");
 var hHook = SetWindowsHookEx(3, funcGetMsgHook, null, GetCurrentThreadId());
 
+window.addEventListener("focus", function(event) {
+  var target = event.target;
+  if (target.localName == "object" || target.localName == "embed")
+    target.blur();
+}, true, true);
+
+window.addEventListener("mousedown", function(event) {
+  var target = event.target;
+  if (target.localName == "object" || target.localName == "embed") {
+
+    let evt = document.createEvent("MouseEvents");
+    evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
+    event.preventDefault();
+    event.stopPropagation();
+    target.parentNode.dispatchEvent(evt);
+  }  
+});
+
 [hHookDll, funcGetMsgHook, hHook].map(function(i) i.toString())
