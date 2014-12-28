@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "ExportFunctions.h"
+#include "ExportFunctionsInternal.h"
 
 HWND g_hwndFocused = NULL;
 

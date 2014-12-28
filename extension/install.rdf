@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+<Description about="urn:mozilla:install-manifest">
+
+  <em:id>flashgestures@patwonder</em:id>
+  <em:name>Flash Gestures</em:name>
+  <em:version>0.1a</em:version>
+  <em:description>Use your favorite mouse gesture add-on on Flash Players.</em:description>
+  <em:creator>Yifan Wu</em:creator>
+  <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
+  <em:iconURL>chrome://flashgestures/skin/icon.png</em:iconURL>
+  <em:targetPlatform>WINNT</em:targetPlatform>
+  <em:unpack>true</em:unpack>
+  <em:bootstrap>true</em:bootstrap>
+
+  <!-- Firefox -->
+  <em:targetApplication>
+    <Description>
+      <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+      <em:minVersion>17.0</em:minVersion>
+      <em:maxVersion>37.0a1</em:maxVersion>
+    </Description>
+  </em:targetApplication>
+
+  <em:localized>
+    <Description>
+      <em:locale>en</em:locale>
+      <em:name>Flash Gestures</em:name>
+      <em:creator>Yifan Wu</em:creator>
+      <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
+      <em:description>Use your favorite mouse gesture add-on on Flash Players.</em:description>
+    </Description>
+  </em:localized>
+
+  <em:localized>
+    <Description>
+      <em:locale>zh-CN</em:locale>
+      <em:name>Flash Gestures</em:name>
+      <em:creator>Yifan Wu</em:creator>
+      <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
+      <em:description>在Flash播放器上使用您喜爱的鼠标手势扩展。</em:description>
+    </Description>
+  </em:localized>
+
+</Description>
+</RDF>

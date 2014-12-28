@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "ExportFunctions.h"
+#include "ExportFunctionsInternal.h"
 #include <unordered_map>
 #include <unordered_set>
 
@@ -198,4 +198,5 @@ void __stdcall UninstallHook() {
 void __stdcall Uninitialize() {
 	if (!PostThreadMessage((DWORD)g_idHookManagerThread, USERMESSAGE_EXIT_THREAD, 0, 0))
 		ATLTRACE(_T("ERROR: PostThreadMessage(USERMESSAGE_EXIT_THREAD) failed, last error = %d\n"), GetLastError());
+	WaitForSingleObject(reinterpret_cast<HANDLE>(g_hHookManageThread), INFINITE);
 }

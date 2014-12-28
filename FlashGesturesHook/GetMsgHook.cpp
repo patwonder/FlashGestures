@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ExportFunctions.h"
+#include "ExportFunctionsInternal.h"
 #include "GestureHandler.h"
 
 using namespace std;

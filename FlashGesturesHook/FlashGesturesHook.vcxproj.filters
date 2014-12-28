@@ -5,6 +5,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="GestureHandler.h" />
     <ClInclude Include="ExportFunctions.h" />
+    <ClInclude Include="ExportFunctionsInternal.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -14,6 +15,7 @@
     <ClCompile Include="HookManage.cpp" />
     <ClCompile Include="WindowManage.cpp" />
     <ClCompile Include="GetMsgHook.cpp" />
+    <ClCompile Include="ExportFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FlashGesturesHook.def" />
