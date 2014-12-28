@@ -116,6 +116,8 @@ bool FilterFirefoxKey(int keyCode, bool bAltPressed, bool bCtrlPressed, bool bSh
 			return true;
 		case VK_F4: // Shift-F4 opens Scratchpad which is very handy
 			return bShiftPressed;
+		case VK_F5: // Refresh
+			return true;
 		case VK_F6: // Locate the address bar
 			return !bShiftPressed;
 		case VK_F7: // Style Editor
