@@ -151,7 +151,7 @@ function onPluginEvent(event) {
 
 function onFocus(event) {
   var target = event.target;
-  if (target instanceof Ci.nsIObjectLoadingContent) {
+  if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
     Utils.LOG("Fixing window focus...");
     Hook.blurAndFocus(target);
   }
@@ -159,7 +159,7 @@ function onFocus(event) {
 
 function onMouseDown(event) {
   var target = event.target;
-  if (target instanceof Ci.nsIObjectLoadingContent) {
+  if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
     let evt = this.window.document.createEvent("MouseEvents");
     evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
     event.preventDefault();
