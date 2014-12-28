@@ -98,7 +98,7 @@ WindowWrapper.prototype = {
   load: function() {
     if (!Hook.initialized) return;
     this.window.addEventListener("focus", onFocus, true);
-    this.window.addEventListener("mousedown", onMouseDown, true);
+    this.window.addEventListener("mousedown", this._onMouseDown = onMouseDown.bind(this), true);
     this.window.addEventListener("PluginInstantiated", onPluginEvent, true);
     
     Utils.LOG("Doing initial hooking.");
@@ -110,7 +110,7 @@ WindowWrapper.prototype = {
    */
   unload: function() {
     this.window.removeEventListener("PluginInstantiated", onPluginEvent, true);
-    this.window.removeEventListener("mousedown", onMouseDown, true);
+    this.window.removeEventListener("mousedown", this._onMouseDown, true);
     this.window.removeEventListener("focus", onFocus, true);
   },
 };
