@@ -1,25 +1,8 @@
-// FlashGesturesHook.cpp : 定义 DLL 应用程序的导出函数。
-//
-
 #include "stdafx.h"
-#include "hook.h"
+#include "ExportFunctions.h"
 #include "GestureHandler.h"
 
 using namespace std;
-
-HHOOK g_hook = NULL;
-
-void InstallHook() {
-	if (!g_hook)
-		g_hook = SetWindowsHookEx(WH_GETMESSAGE, GetMsgHook, NULL, GetCurrentThreadId());
-}
-
-void UninstallHook() {
-	if (g_hook) {
-		UnhookWindowsHookEx(g_hook);
-		g_hook = NULL;
-	}
-}
 
 template <class T, class R>
 int ArrayFind(const T* arrayBegin, int arrayLength, const R& toFind) {

@@ -80,7 +80,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="GestureHandler.h" />
-    <ClInclude Include="hook.h" />
+    <ClInclude Include="ExportFunctions.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -95,11 +95,13 @@
     </ClCompile>
     <ClCompile Include="GestureHandler.cpp" />
     <ClCompile Include="GestureHandlerImpl.cpp" />
-    <ClCompile Include="hook.cpp" />
+    <ClCompile Include="GetMsgHook.cpp" />
+    <ClCompile Include="HookManage.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="WindowManage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FlashGesturesHook.def" />

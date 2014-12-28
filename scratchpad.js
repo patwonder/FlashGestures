@@ -7,42 +7,51 @@
  * 3. 显示 在选中内容后面以注释的形式插入返回的结果。 (Ctrl+L)
  */
 
+
+(function() {
+  
+var global = window.FlashGestures || (window.FlashGestures = {});
 Components.utils.import("resource://gre/modules/ctypes.jsm");
+if (!global.installed) {
+  var DWORD = ctypes.uint32_t;
+  var VOID = ctypes.void_t;
+  var LRESULT = ctypes.intptr_t;
+  var INT = ctypes.int32_t;
+  var WPARAM = ctypes.uintptr_t;
+  var LPARAM = ctypes.uintptr_t;
+  global.hHookDll = ctypes.open("D:\\OpenSourceProjects\\FlashGestures\\Debug\\FlashGesturesHook.dll");
+  global.funcInitialize = global.hHookDll.declare("Initialize", ctypes.winapi_abi, DWORD);
+  global.funcInstallHook = global.hHookDll.declare("InstallHook", ctypes.winapi_abi, DWORD);
+  global.funcUninstallHook = global.hHookDll.declare("UninstallHook", ctypes.winapi_abi, VOID);
+  global.funcGetMsgHook = global.hHookDll.declare("GetMsgHook", ctypes.winapi_abi, LRESULT, INT, WPARAM, LPARAM);
+  global.funcUninitialize = global.hHookDll.declare("Uninitialize", ctypes.winapi_abi, VOID);
+  global.funcRecordFocusedWindow = global.hHookDll.declare("RecordFocusedWindow", ctypes.winapi_abi, VOID);
+  global.funcRestoreFocusedWindow = global.hHookDll.declare("RestoreFocusedWindow", ctypes.winapi_abi, VOID);
+  global.funcInitialize();
+  global.funcInstallHook();
+  global.installed = true;
 
-var kernel = ctypes.open("kernel32.dll");
-var user = ctypes.open("user32.dll");
-var HMODULE = ctypes.uint32_t;
-var HWND = ctypes.uint32_t;
-var LPCTSTR = ctypes.jschar.ptr;
-var LPCSTR = ctypes.char.ptr;
-var DWORD = ctypes.uint32_t;
-var HHOOK = ctypes.voidptr_t;
-var HOOKPROC = ctypes.voidptr_t;
-var HINSTANCE = ctypes.voidptr_t;
-var LoadLibrary = kernel.declare("LoadLibraryW", ctypes.winapi_abi, HMODULE, LPCTSTR);
-var GetProcAddress = kernel.declare("GetProcAddress", ctypes.winapi_abi, ctypes.void_t.ptr, HMODULE, LPCSTR);
-var GetCurrentThreadId = kernel.declare("GetCurrentThreadId", ctypes.winapi_abi, DWORD);
-var SetWindowsHookEx = user.declare("SetWindowsHookExW", ctypes.winapi_abi, HHOOK, DWORD, HOOKPROC, HINSTANCE, DWORD);
-var hHookDll = LoadLibrary("D:\\OpenSourceProjects\\FlashGestures\\Debug\\FlashGesturesHook.dll");
-var funcGetMsgHook = GetProcAddress(hHookDll, "GetMsgHook");
-var hHook = SetWindowsHookEx(3, funcGetMsgHook, null, GetCurrentThreadId());
+  window.addEventListener("focus", function(event) {
+    var target = event.target;
+    if (target.localName == "object" || target.localName == "embed") {
+      global.funcRecordFocusedWindow();
+      target.blur();
+      global.funcRestoreFocusedWindow();
+    }
+  }, true, true);
 
-window.addEventListener("focus", function(event) {
-  var target = event.target;
-  if (target.localName == "object" || target.localName == "embed")
-    target.blur();
-}, true, true);
+  window.addEventListener("mousedown", function(event) {
+    var target = event.target;
+    if (target.localName == "object" || target.localName == "embed") {
 
-window.addEventListener("mousedown", function(event) {
-  var target = event.target;
-  if (target.localName == "object" || target.localName == "embed") {
+      let evt = document.createEvent("MouseEvents");
+      evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
+      event.preventDefault();
+      event.stopPropagation();
+      target.parentNode.dispatchEvent(evt);
+    }  
+  }, true, true);
+}
 
-    let evt = document.createEvent("MouseEvents");
-    evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
-    event.preventDefault();
-    event.stopPropagation();
-    target.parentNode.dispatchEvent(evt);
-  }  
-});
-
-[hHookDll, funcGetMsgHook, hHook].map(function(i) i.toString())
+return [global.hHookDll, global.funcGetMsgHook].map(function(i) i.toString())
+})();

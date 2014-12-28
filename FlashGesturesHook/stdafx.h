@@ -11,6 +11,10 @@
 // Windows 头文件:
 #include <windows.h>
 
+#ifdef _DEBUG
+#include <Psapi.h>
+#pragma comment(lib, "Psapi.lib")
+#endif
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // 某些 CString 构造函数将是显式的
 
