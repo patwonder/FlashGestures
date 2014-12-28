@@ -22,8 +22,7 @@ let Utils = {
   /**
    * Whether running in 64bit environment.
    */
-  get is64bit()
-  {
+  get is64bit() {
     return Services.appinfo.XPCOMABI.indexOf('64') != -1;
   },
   

@@ -26,6 +26,7 @@ GestureHandler::Handlers::~Handlers() {
 	for (size_t i = 0; i < m_vHandlers.size(); i++)
 		delete m_vHandlers[i];
 	m_vHandlers.clear();
+	ATLTRACE(_T("Cleared gesture handlers.\n"));
 }
 
 GestureHandler::GestureHandler() :
