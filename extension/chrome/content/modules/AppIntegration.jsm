@@ -151,7 +151,7 @@ function onPluginEvent(event) {
 
 function onFocus(event) {
   var target = event.target;
-  if (target.localName == "object" || target.localName == "embed") {
+  if (target instanceof Ci.nsIObjectLoadingContent) {
     Utils.LOG("Fixing window focus...");
     Hook.blurAndFocus(target);
   }
@@ -159,7 +159,7 @@ function onFocus(event) {
 
 function onMouseDown(event) {
   var target = event.target;
-  if (target.localName == "object" || target.localName == "embed") {
+  if (target instanceof Ci.nsIObjectLoadingContent) {
     let evt = this.window.document.createEvent("MouseEvents");
     evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
     event.preventDefault();
