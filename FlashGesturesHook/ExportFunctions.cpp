@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stdafx.h"
+#include "ExportFunctions.h"
 #include "ExportFunctionsInternal.h"
 
 bool __stdcall FGH_Initialize() { return Initialize(); }

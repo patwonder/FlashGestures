@@ -6,6 +6,7 @@
     <ClInclude Include="GestureHandler.h" />
     <ClInclude Include="ExportFunctions.h" />
     <ClInclude Include="ExportFunctionsInternal.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -19,5 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="FlashGesturesHook.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FlashGesturesHook.rc" />
   </ItemGroup>
 </Project>
