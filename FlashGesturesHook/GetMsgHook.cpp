@@ -15,7 +15,7 @@ int ArrayFind(const T* arrayBegin, int arrayLength, const R& toFind) {
 
 HWND GetGeckoPluginWindow(HWND hwndChild, int maxLevelsUp) {
 	static const CString targetWindowClassNames[] = {
-		_T("GeckoPluginWindow"), _T("SunAwtFrame"), _T("Edit")
+		_T("GeckoPluginWindow"), _T("GeckoFPSandboxChildWindow"), _T("SunAwtFrame"), _T("Edit")
 	};
 	static const int nTargetWindowClassNames = ARRAYSIZE(targetWindowClassNames);
 
@@ -26,8 +26,11 @@ HWND GetGeckoPluginWindow(HWND hwndChild, int maxLevelsUp) {
 	while (hwndParent && levels <= maxLevelsUp && index < 0) {
 		hwndChild = hwndParent;
 
-		GetClassName(hwndChild, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
-		strClassName.ReleaseBuffer();
+		int nCopied = GetClassName(hwndChild, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+		strClassName.ReleaseBuffer(nCopied);
+
+		if (nCopied == 0)
+			return NULL;
 
 		index = ArrayFind(targetWindowClassNames, nTargetWindowClassNames, strClassName);
 
@@ -35,9 +38,10 @@ HWND GetGeckoPluginWindow(HWND hwndChild, int maxLevelsUp) {
 		levels++;
 	}
 
-	if (index >= 0)
-		return hwndChild;
-	else return NULL;
+	if (index < 0)
+		return NULL;
+
+	return hwndChild;
 }
 
 // Firefox 4.0 uses a new window hierarchy,
@@ -45,23 +49,33 @@ HWND GetGeckoPluginWindow(HWND hwndChild, int maxLevelsUp) {
 // which is in another top-level MozillaWindowClass.
 // Our messges should be sent to the top-level window, so here's the function that finds it
 HWND GetTopMozillaWindowClassWindow(HWND hwndChild) {
-	static const TCHAR* szTargetWindowClassName = _T("MozillaWindowClass");
+	static const CString targetWindowClassName = _T("MozillaWindowClass");
+	static const CString lowIntegrityWindowClassNames[] = {
+		_T("GeckoFPSandboxChildWindow")
+	};
+	static const int nLowIntegrityWindowClassNames = ARRAYSIZE(lowIntegrityWindowClassNames);
 
-	HWND hwnd = ::GetParent(hwndChild);
-	for (int i = 0; i < 5; i++) {
-		HWND hwndParent = ::GetParent(hwnd);
-		if (NULL == hwndParent) break;
-		hwnd = hwndParent;
-	}
+	// Check child(plugin) window class name
+	CString childClassName;
+	int nCopied = GetClassName(hwndChild, childClassName.GetBuffer(MAX_PATH), MAX_PATH);
+	childClassName.ReleaseBuffer(nCopied);
+	if (nCopied == 0)
+		return NULL;
 
-	TCHAR szClassName[MAX_PATH];
-	if (GetClassName(hwnd, szClassName, ARRAYSIZE(szClassName)) > 0) {
-		if (_tcscmp(szClassName, szTargetWindowClassName) == 0) {
-			return hwnd;
-		}
-	}
+	HWND hwnd = GetAncestor(hwndChild, GA_ROOTOWNER);
 
-	return NULL;
+	// Bypass root window class checking, as we can't do it reliably in a low integrity process
+	if (0 <= ArrayFind(lowIntegrityWindowClassNames, nLowIntegrityWindowClassNames, childClassName))
+		return hwnd;
+
+	// Check root window class name
+	CString rootClassName;
+	nCopied = GetClassName(hwnd, rootClassName.GetBuffer(MAX_PATH), MAX_PATH);
+	rootClassName.ReleaseBuffer(nCopied);
+	if (nCopied == 0 || rootClassName != targetWindowClassName)
+		return NULL;
+
+	return hwnd;
 }
 
 bool FilterFirefoxKey(int keyCode, bool bAltPressed, bool bCtrlPressed, bool bShiftPressed) {
