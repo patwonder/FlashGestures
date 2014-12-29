@@ -6,6 +6,8 @@
 
 using namespace std;
 
+bool g_bIsInProcessPlugin = false;
+
 DWORD g_idMainThread = 0;
 uintptr_t g_hHookManageThread = 0;
 unsigned int g_idHookManagerThread = 0;
@@ -155,6 +157,8 @@ unsigned int __stdcall HookManageThread(void* vpStartEvent) {
 bool __stdcall Initialize() {
 	if (g_idMainThread)
 		return true;
+
+	g_bIsInProcessPlugin = true;
 
 	g_idMainThread = GetCurrentThreadId();
 	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
