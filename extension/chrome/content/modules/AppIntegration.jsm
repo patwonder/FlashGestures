@@ -157,6 +157,15 @@ function onFocus(event) {
   }
 }
 
+// some <embed>'s parent may be <object>
+function getSafeParent(target) {
+  let parent = target.parentElement;
+  while (parent instanceof Ci.nsIObjectLoadingContent)
+    parent = parent.parentElement;
+  
+  return parent;
+}
+
 function onMouseDown(event) {
   var target = event.target;
   if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
@@ -164,7 +173,7 @@ function onMouseDown(event) {
     evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
     event.preventDefault();
     event.stopPropagation();
-    target.parentNode.dispatchEvent(evt);
+    getSafeParent(target).dispatchEvent(evt);
   }  
 }
 
