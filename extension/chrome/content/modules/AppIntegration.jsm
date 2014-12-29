@@ -171,8 +171,10 @@ function onMouseDown(event) {
   if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
     let evt = this.window.document.createEvent("MouseEvents");
     evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
-    event.preventDefault();
-    event.stopPropagation();
+    if (event.buttons & 0x2) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     getSafeParent(target).dispatchEvent(evt);
   }  
 }
