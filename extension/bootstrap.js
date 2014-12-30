@@ -35,17 +35,17 @@ function startup(data, reason) {
 }
 
 function shutdown(data, reason) {
+  if (Hook.initialized) {
+    Utils.LOG("Uninitializing...");
+    Hook.uninit();
+  }
+
   if (reason == APP_SHUTDOWN)
     return;
 
   Services.wm.removeListener(WindowListener);
   forEachOpenWindow(unloadFromWindow);
   
-  if (Hook.initialized) {
-    Utils.LOG("Uninitializing...");
-    Hook.uninit();
-  }
-
   Cu.unload(moduleURIPrefix + "Hook.jsm");
   Cu.unload(moduleURIPrefix + "AppIntegration.jsm");
   Cu.unload(moduleURIPrefix + "Utils.jsm");  // Same URL as above
