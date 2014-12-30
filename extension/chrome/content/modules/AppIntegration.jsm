@@ -185,15 +185,28 @@ function getSafeParent(target) {
   return parent;
 }
 
+function copyMouseEvent(window, event) {
+  return new window.MouseEvent(event.type, {
+    screenX: event.screenX, screenY: event.screenY,
+    clientX: event.clientX, clientY: event.clientY,
+    ctrlKey: event.ctrlKey, shiftKey: event.shiftKey,
+    altKey: event.altKey, metaKey: event.metaKey,
+    button: event.button, buttons: event.buttons,
+    detail: event.detail, view: event.view,
+    bubbles: event.bubbles, cancelable: event.cancelable
+  });
+}
+
 function onMouseDown(event) {
   var target = event.target;
   if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
-    let evt = this.window.document.createEvent("MouseEvents");
-    evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
+    let evt = copyMouseEvent(this.window, event);
+    
     if (event.buttons & 0x2) {
       event.preventDefault();
       event.stopPropagation();
     }
+    
     getSafeParent(target).dispatchEvent(evt);
   }  
 }
