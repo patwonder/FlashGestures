@@ -85,7 +85,7 @@ HWND VerifyAndGetTopMozillaWindowClassWindow(HWND hwndChild) {
 	HWND hwndIntermediate = 
 		GetParentWindowForAnyClassName(hwndChild, targetPluginWindowClassNames,
 		g_bIsInProcessPlugin ? nTargetPluginWindowClassNamesInProcess : nTargetPluginWindowClassNames,
-		5, intermediateClassName);
+		10, intermediateClassName);
 	if (!hwndIntermediate)
 		return NULL;
 
@@ -231,9 +231,6 @@ bool ForwardFirefoxKeyMessage(HWND hwndFirefox, MSG* pMsg) {
 }
 
 bool ForwardFirefoxMouseMessage(HWND hwndFirefox, MSG* pMsg) {
-	// Forward plain move messages to let firefox handle full screen auto-hide or tabbar auto-arrange
-	bool bShouldForward = pMsg->message == WM_MOUSEMOVE && pMsg->wParam == 0;
-
 	const std::vector<GestureHandler*>& handlers = GestureHandler::getHandlers();
 
 	// Forward the mouse message if any guesture handler is triggered.
@@ -262,7 +259,6 @@ bool ForwardFirefoxMouseMessage(HWND hwndFirefox, MSG* pMsg) {
 		bShouldSwallow = bShouldSwallow || (*iter)->shouldSwallow(res);
 		if (res == MHR_Triggered) {
 			(*iter)->forwardAllTarget(pMsg->hwnd, hwndFirefox);
-			bShouldForward = false;
 			break;
 		} else if (res == MHR_Canceled) {
 			bool bShouldForwardBack = true;
@@ -281,9 +277,6 @@ bool ForwardFirefoxMouseMessage(HWND hwndFirefox, MSG* pMsg) {
 				}
 			}
 		}
-	}
-	if (bShouldForward) {
-		GestureHandler::forwardTarget(pMsg, hwndFirefox);
 	}
 	return bShouldSwallow;
 }
