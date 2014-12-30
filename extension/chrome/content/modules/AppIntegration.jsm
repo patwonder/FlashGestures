@@ -116,6 +116,7 @@ WindowWrapper.prototype = {
     this.window.addEventListener("focus", onFocus, true);
     this.window.addEventListener("mousedown", this._onMouseDown = onMouseDown.bind(this), true);
     this.window.addEventListener("PluginInstantiated", onPluginEvent, true);
+    this._listenersAdded = true;
     
     Utils.LOG("Doing initial hooking.");
     Hook.install();
@@ -125,10 +126,11 @@ WindowWrapper.prototype = {
    * Remove stuff from the wrapped window
    */
   unload: function() {
-    if (!Hook.initialized) return;
+    if (!this._listenersAdded) return;
     this.window.removeEventListener("PluginInstantiated", onPluginEvent, true);
     this.window.removeEventListener("mousedown", this._onMouseDown, true);
     this.window.removeEventListener("focus", onFocus, true);
+    this._listenersAdded = false;
   },
 };
 
