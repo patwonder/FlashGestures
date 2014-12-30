@@ -109,12 +109,18 @@ WindowWrapper.prototype = {
   Utils: null,
   
   /**
+   * Keep track of registered mouseup listeners
+   */
+  _onMouseUpListeners: [],
+  
+  /**
    * Inject stuff into the wrapped window
    */
   load: function() {
     if (!Hook.initialized) return;
     this.window.addEventListener("focus", onFocus, true);
     this.window.addEventListener("mousedown", this._onMouseDown = onMouseDown.bind(this), true);
+    this.window.addEventListener("mouseup", this._onMouseUp = onMouseUp.bind(this), true);
     this.window.addEventListener("PluginInstantiated", onPluginEvent, true);
     this._listenersAdded = true;
     
@@ -128,6 +134,7 @@ WindowWrapper.prototype = {
   unload: function() {
     if (!this._listenersAdded) return;
     this.window.removeEventListener("PluginInstantiated", onPluginEvent, true);
+    this.window.removeEventListener("mouseup", this._onMouseUp, true);
     this.window.removeEventListener("mousedown", this._onMouseDown, true);
     this.window.removeEventListener("focus", onFocus, true);
     this._listenersAdded = false;
@@ -198,17 +205,70 @@ function copyMouseEvent(window, event) {
 }
 
 function onMouseDown(event) {
+  if (this._onMouseDownSimulating) return;
   var target = event.target;
   if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
     let evt = copyMouseEvent(this.window, event);
     
     if (event.buttons & 0x2) {
+      // For right clicks, we create a shadow event that is dispatched 
+      // to the original target if the following conditions are met:
+      // 1) a corresponding mouseup event is fired within 500ms
+      // 2) the mouseup event is fired on the target
+      // 3) the mouseup event is fired at a position close to the original event
+      const IntervalThreshold = 500;
+      const DistanceThreshold = 10;
+
+      Utils.LOG("mousedown rightbutton");
+      let pendingEvent = copyMouseEvent(this.window, event);
+
+      let cancelTimer = null;
+
+      let onMouseUp = function(upEvent) {
+        if (upEvent.button !== 2) return;        
+        
+        Utils.LOG("mouseup rightbutton");
+        Utils.removeOneItem(this._onMouseUpListeners, onMouseUp);
+        Utils.cancelAsyncTimeout(cancelTimer);
+        
+        if (upEvent.target === target && Math.abs(pendingEvent.clientX - upEvent.clientX) +
+            Math.abs(pendingEvent.clientY - upEvent.clientY) <= DistanceThreshold)
+        {
+          pendingEvent.screenX = upEvent.screenX;
+          pendingEvent.screenY = upEvent.screenY;
+          pendingEvent.clientX = upEvent.clientX;
+          pendingEvent.clientY = upEvent.clientY;
+          this._onMouseDownSimulating = true;
+          try {
+            target.dispatchEvent(pendingEvent);
+          } finally {
+            this._onMouseDownSimulating = false;
+          }
+        }
+      }.bind(this);
+      this._onMouseUpListeners.push(onMouseUp);
+
+      cancelTimer = Utils.runAsyncTimeout(function() {
+        Utils.LOG("cancel mouseup listener");
+        Utils.removeOneItem(this._onMouseUpListeners, onMouseUp);
+      }, this, IntervalThreshold);
+      
       event.preventDefault();
       event.stopPropagation();
     }
     
     getSafeParent(target).dispatchEvent(evt);
-  }  
+  }
+}
+
+function onMouseUp(event) {
+  this._onMouseUpListeners.slice().forEach(function(listener) {
+    try {
+      listener(event);
+    } catch (ex) {
+      Utils.ERROR(ex);
+    }
+  });
 }
 
 init();
