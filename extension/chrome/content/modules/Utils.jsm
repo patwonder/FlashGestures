@@ -36,16 +36,21 @@ let Utils = {
   _addonVersion: "0.1",
   _installPath: "",
   
+  init: function(data) {
+    this._addonVersion = data.version;
+    this._installPath = data.installPath.path;
+  },
+  
+  uninit: function() {
+    // removes any remaining async calls
+    this._cancelAllAsyncTimeouts();
+  },
+  
   /**
    * Whether running in 64bit environment.
    */
   get is64bit() {
     return Services.appinfo.XPCOMABI.indexOf('64') != -1;
-  },
-  
-  initData: function(data) {
-    this._addonVersion = data.version;
-    this._installPath = data.installPath.path;
   },
   
   get addonVersion() {
@@ -167,6 +172,13 @@ let Utils = {
       timer.cancel();
       this.removeOneItem(this._timers, timer);
     }
+  },
+  
+  _cancelAllAsyncTimeouts: function() {
+    this._timers.forEach(function(timer) {
+      timer.cancel();
+    });
+    this._timers = [];
   },
 };
 

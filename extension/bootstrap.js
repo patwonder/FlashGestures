@@ -25,7 +25,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 function startup(data, reason) {
   Cu.import(moduleURIPrefix + "Utils.jsm");
-  Utils.initData(data);
+  Utils.init(data);
   
   Cu.import(moduleURIPrefix + "AppIntegration.jsm");
   Cu.import(moduleURIPrefix + "Hook.jsm");
@@ -48,7 +48,9 @@ function shutdown(data, reason) {
   
   Cu.unload(moduleURIPrefix + "Hook.jsm");
   Cu.unload(moduleURIPrefix + "AppIntegration.jsm");
-  Cu.unload(moduleURIPrefix + "Utils.jsm");  // Same URL as above
+  
+  Utils.uninit();
+  Cu.unload(moduleURIPrefix + "Utils.jsm");
 
   // HACK WARNING: The Addon Manager does not properly clear all addon related caches on update;
   //               in order to fully update images and locales, their caches need clearing here
