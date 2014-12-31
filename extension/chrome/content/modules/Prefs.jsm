@@ -131,6 +131,24 @@ let Prefs = {
   get defaultBranch() /**nsIPreferenceBranch*/ {
     return Services.prefs.getDefaultBranch(prefRoot);
   },
+  
+  /**
+   * Reset a pref to its default value.
+   */
+  reset: function(name) {
+    let type = defaultBranch.getPrefType(name);
+    switch (type) {
+    case Ci.nsIPrefBranch.PREF_INT:
+      this[name] = defaultBranch.getIntPref(name);
+      break;
+    case Ci.nsIPrefBranch.PREF_BOOL:
+      this[name] = defaultBranch.getBoolPref(name);
+      break;
+    case Ci.nsIPrefBranch.PREF_STRING:
+      this[name] = defaultBranch.getComplexValue(name, Ci.nsISupportsString).data;
+      break;
+    }
+  },
 };
 
 /**

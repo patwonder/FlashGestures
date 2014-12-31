@@ -64,7 +64,14 @@ function shutdown(data, reason) {
 }
 
 function install(data, reason) { }
-function uninstall(data,reason) { }
+
+function uninstall(data,reason) {
+  if (reason == ADDON_UNINSTALL) {
+    console.log("LOG [FlashGestures] Uninstal detected, resetting critical prefs.");
+    Services.prefs.setBoolPref("extensions.flashgestures.enabled", true);
+    Services.prefs.setBoolPref("extensions.flashgestures.toggleButtonAdded", false);
+  }
+}
 
 function loadIntoWindow(window) {
   AppIntegration.addWindow(window);
