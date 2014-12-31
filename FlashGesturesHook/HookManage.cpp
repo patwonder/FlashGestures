@@ -33,6 +33,15 @@ unordered_map<DWORD, HHOOK> g_mapHookByThreadId;
 vector<HANDLE> g_vThreadsToWait;
 vector<DWORD> g_vThreadIdsToWait;
 
+#ifdef _DEBUG
+struct DetailedHookInformation {
+	DWORD idProcess;
+	DWORD idThread;
+	CString fileName;
+};
+unordered_map<DWORD, DetailedHookInformation> g_mapHookInfoByThreadId;
+#endif
+
 HMODULE g_hThisModule = NULL;
 
 const UINT USERMESSAGE_INSTALL_HOOK = WM_USER + 20;
@@ -45,20 +54,27 @@ bool InstallHookForThread(DWORD idThread) {
 	DWORD idProcess = GetProcessIdOfThread(hThread);
 	CloseHandle(hThread);
 	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, idProcess);
-	TCHAR szFileName[MAX_PATH];
+	CString fileName;
 	DWORD dwSize = MAX_PATH;
-	QueryFullProcessImageName(hProcess, 0, szFileName, &dwSize);
+	QueryFullProcessImageName(hProcess, 0, fileName.GetBuffer(dwSize), &dwSize);
+	fileName.ReleaseBuffer();
 	CloseHandle(hProcess);
-	ATLTRACE(_T("Hooking: %s\n"), szFileName);
 #endif
 
 	HHOOK hhook = idThread == g_idMainThread
 		? SetWindowsHookEx(WH_GETMESSAGE, GetMsgHook, NULL, g_idMainThread)
 		: SetWindowsHookEx(WH_GETMESSAGE, GetMsgHook, g_hThisModule, idThread);
-	if (hhook != NULL)
+	if (hhook != NULL) {
 		g_mapHookByThreadId[idThread] = hhook;
-	else
-		ATLTRACE(_T("ERROR: failed to hook thread, last error = %d\n"), GetLastError());
+#ifdef _DEBUG
+		ATLTRACE(_T("Hooked: %s, PID=%d, TID=%d\n"), fileName, idProcess, idThread);
+		DetailedHookInformation hookInfo = { idProcess, idThread, fileName };
+		g_mapHookInfoByThreadId[idThread] = hookInfo;
+	} else {
+		ATLTRACE(_T("ERROR: failed to hook %s, PID=%d, TID=%d, lastError=%d\n"),
+				 fileName, idProcess, idThread, GetLastError());
+#endif
+	}
 	return hhook != NULL;
 }
 
@@ -110,12 +126,21 @@ bool InstallAllHooks() {
 bool UninstallAllHooks() {
 	for (HANDLE hThread : g_vThreadsToWait)
 		CloseHandle(hThread);
-	for (auto pair : g_mapHookByThreadId)
+	for (auto pair : g_mapHookByThreadId) {
 		UnhookWindowsHookEx(pair.second);
+#ifdef _DEBUG
+		const DetailedHookInformation& info = g_mapHookInfoByThreadId[pair.first];
+		ATLTRACE(_T("Unhooked: %s, PID=%d, TID=%d\n"),
+				 info.fileName, info.idProcess, info.idThread);
+#endif
+	}
 
 	g_vThreadsToWait.clear();
 	g_vThreadIdsToWait.clear();
 	g_mapHookByThreadId.clear();
+#ifdef _DEBUG
+	g_mapHookInfoByThreadId.clear();
+#endif
 
 	return true;
 }
@@ -165,6 +190,12 @@ unsigned int __stdcall HookManageThread(void* vpStartEvent) {
 
 			CloseHandle(hThread);
 			UnhookWindowsHookEx(hhook);
+#ifdef _DEBUG
+			const DetailedHookInformation& info = g_mapHookInfoByThreadId[idThread];
+			ATLTRACE(_T("Unhooked: %s, PID=%d, TID=%d\n"),
+					 info.fileName, info.idProcess, info.idThread);
+			g_mapHookInfoByThreadId.erase(idThread);
+#endif
 		} else { // failed, timeout or whatever wierd reasons
 			ATLTRACE(_T("ERROR: failed MsgWaitForMultipleObjects, last error = %d\n"), ret == WAIT_FAILED ? GetLastError() : 0);
 		}
