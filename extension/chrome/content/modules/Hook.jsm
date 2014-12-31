@@ -48,16 +48,12 @@ let RestoreFocusedWindow = null;
 
 let initialized = false;
 
-function init() {
-  Hook.init();
-}
-
 let Hook = {
   get initialized() {
     return initialized;
   },
   
-  init: function() {
+  init: function(data, unlist) {
     try {
       hHookDll = ctypes.open(Utils.dllPath);
     } catch (ex) {
@@ -84,6 +80,8 @@ let Hook = {
       return false;
     }
     
+    unlist.push([this.uninit, this]);
+    
     return initialized = true;
   },
   
@@ -108,6 +106,7 @@ let Hook = {
     if (!initialized)
       return;
     
+    Utils.LOG("Uninitializing...");
     Uninitialize();
     hHookDll.close();
     initialized = false;
@@ -122,5 +121,3 @@ let Hook = {
     RestoreFocusedWindow();
   },
 };
-
-init();

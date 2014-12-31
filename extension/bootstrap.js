@@ -23,40 +23,69 @@ const moduleURIPrefix = "chrome://flashgestures/content/modules/";
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-function startup(data, reason) {
-  Cu.import(moduleURIPrefix + "Utils.jsm");
-  Utils.init(data);
-  
-  Cu.import(moduleURIPrefix + "Prefs.jsm");
-  Cu.import(moduleURIPrefix + "Hook.jsm");
-  Cu.import(moduleURIPrefix + "PersistUI.jsm");
-  Cu.import(moduleURIPrefix + "AppIntegration.jsm");
+let moduleList = [
+  moduleURIPrefix + "Utils.jsm",
+  moduleURIPrefix + "Prefs.jsm",
+  moduleURIPrefix + "Hook.jsm",
+  moduleURIPrefix + "PersistUI.jsm",
+  moduleURIPrefix + "AppIntegration.jsm",
+];
 
-  forEachOpenWindow(loadIntoWindow);
-  Services.wm.addListener(WindowListener);
+let loadedModules = Object.create(null);
+let uninitFuncs = [];
+
+let initData = null;
+
+/**
+ * Loads and initializes a module.
+ */
+function loadModule(url) {
+  if (url in loadedModules) return;
+
+  let module = {};
+  try {
+    Cu.import(url, module);
+  } catch (ex) {
+    Utils.ERROR("Failed to load module " + url + ": " + ex);
+    return;
+  }
+
+  loadedModules[url] = true;
+
+  for (let prop in module) {
+    let obj = module[prop];
+    if ("init" in obj) {
+      try {
+        obj.init(initData, uninitFuncs);
+      } catch (ex) {
+        Utils.ERROR("Calling method init() for module " + url + " failed: " + ex);
+      }
+      return;
+    }
+  }
+}
+
+function revForEach(arr, func) {
+  for (let i = arr.length - 1; i >= 0; i--)
+    func(arr[i]);
+}
+
+function startup(data, reason) {
+  initData = data;
+  moduleList.forEach(loadModule);
 }
 
 function shutdown(data, reason) {
-  if (Hook.initialized) {
-    Utils.LOG("Uninitializing...");
-    Hook.uninit();
-  }
-
-  if (reason == APP_SHUTDOWN)
-    return;
-
-  Services.wm.removeListener(WindowListener);
-  forEachOpenWindow(unloadFromWindow);
-  
-  AppIntegration.uninit();
-  Prefs.uninit();
-  Utils.uninit();
-
-  Cu.unload(moduleURIPrefix + "AppIntegration.jsm");
-  Cu.unload(moduleURIPrefix + "PersistUI.jsm");
-  Cu.unload(moduleURIPrefix + "Hook.jsm");
-  Cu.unload(moduleURIPrefix + "Prefs.jsm");
-  Cu.unload(moduleURIPrefix + "Utils.jsm");
+  revForEach(uninitFuncs, function(func) {
+    func[0].call(func[1]);
+  });
+  uninitFuncs = [];
+  revForEach(moduleList, function(url) {
+    if (url in loadedModules) {
+      Cu.unload(url);
+      delete loadedModules[url];
+    }
+  });
 
   // HACK WARNING: The Addon Manager does not properly clear all addon related caches on update;
   //               in order to fully update images and locales, their caches need clearing here
@@ -72,44 +101,3 @@ function uninstall(data,reason) {
     Services.prefs.setBoolPref("extensions.flashgestures.toggleButtonAdded", false);
   }
 }
-
-function loadIntoWindow(window) {
-  AppIntegration.addWindow(window);
-}
-
-function unloadFromWindow(window) {
-  AppIntegration.removeWindow(window);
-}
-
-// Apply a function to all open browser windows
-function forEachOpenWindow(todo) {
-  var windows = Services.wm.getEnumerator("navigator:browser");
-  while (windows.hasMoreElements())
-      todo(windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindow));
-}
-
-var WindowListener = {
-  QueryInterface: function(aIID) {
-   if (aIID.equals(Ci.nsIWindowMediatorListener) ||
-       aIID.equals(Ci.nsISupportsWeakReference) ||
-       aIID.equals(Ci.nsISupports))
-     return this;
-   throw Cr.NS_NOINTERFACE;
-  },
-
-  onOpenWindow: function(xulWindow) {
-    var window = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-    function onWindowLoad() {
-      window.removeEventListener("load", onWindowLoad);
-      if (window.document.documentElement.getAttribute("windowtype") == "navigator:browser")
-        loadIntoWindow(window);
-    }
-    window.addEventListener("load", onWindowLoad);
-  },
-  onCloseWindow: function(xulWindow) {
-    var window = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-    if (window.document.documentElement.getAttribute("windowtype") == "navigator:browser")
-      unloadFromWindow(window);
-  },
-  onWindowTitleChange: function(xulWindow, newTitle) { }
-};

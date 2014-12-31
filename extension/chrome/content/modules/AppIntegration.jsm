@@ -47,16 +47,12 @@ const globalName = "gFlashGestures";
 
 const stylesheetURL = "chrome://flashgestures/skin/main.css";
 
-function init() {
-  AppIntegration.init();
-}
-
 /**
  * Exported app integration functions.
  * @class
  */
 let AppIntegration = {
-  init: function() {
+  init: function(data, unlist) {
     loadStylesheet();
     
     if (Hook.initialized) {
@@ -66,9 +62,17 @@ let AppIntegration = {
           AppIntegration.reloadPrefs();
       });
     }
+    
+    forEachOpenWindow(this.addWindow, this);
+    Services.wm.addListener(WindowListener);
+
+    unlist.push([this.uninit, this]);
   },
   
   uninit: function() {
+    Services.wm.removeListener(WindowListener);
+    forEachOpenWindow(this.removeWindow, this);
+
     unloadStylesheet();
   },
   
@@ -269,6 +273,31 @@ WindowWrapper.prototype = {
   },
 };
 
+// Apply a function to all open browser windows
+function forEachOpenWindow(todo, thisPtr) {
+  let windows = Services.wm.getEnumerator("navigator:browser");
+  while (windows.hasMoreElements())
+    todo.call(thisPtr, windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindow));
+}
+
+let WindowListener = {
+  onOpenWindow: function(xulWindow) {
+    let window = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+    function onWindowLoad() {
+      window.removeEventListener("load", onWindowLoad);
+      if (window.document.documentElement.getAttribute("windowtype") == "navigator:browser")
+        AppIntegration.addWindow(window);
+    }
+    window.addEventListener("load", onWindowLoad);
+  },
+  onCloseWindow: function(xulWindow) {
+    let window = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+    if (window.document.documentElement.getAttribute("windowtype") == "navigator:browser")
+      AppIntegration.removeWindow(window);
+  },
+  onWindowTitleChange: function(xulWindow, newTitle) { }
+};
+
 function loadStylesheet() {
   let styleSheetService= Components.classes["@mozilla.org/content/style-sheet-service;1"]
                                    .getService(Components.interfaces.nsIStyleSheetService);
@@ -339,7 +368,7 @@ function onPluginEvent(event) {
 function onFocus(event) {
   if (!Prefs.enabled) return;
   
-  var target = event.target;
+  let target = event.target;
   if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
     Utils.LOG("Fixing window focus...");
     Hook.blurAndFocus(target);
@@ -370,7 +399,7 @@ function copyMouseEvent(window, event) {
 function onMouseDown(event) {
   if (!Prefs.enabled) return;
   
-  var target = event.target;
+  let target = event.target;
   if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
     let evt = copyMouseEvent(this.window, event);
     
@@ -382,5 +411,3 @@ function onMouseDown(event) {
     getSafeParent(target).dispatchEvent(evt);
   }  
 }
-
-init();

@@ -35,11 +35,6 @@ Cu.import(moduleURIPrefix + "Utils.jsm");
 const prefRoot = "extensions.flashgestures.";
 const prefsURL = "chrome://flashgestures/content/preferences/FlashGestures.js";
 
-function init() {
-  initDefaultPrefs();
-  Prefs.init();
-}
-
 function initDefaultPrefs() {
   let branch = Services.prefs.getDefaultBranch("");
   let prefLoaderScope = {
@@ -78,7 +73,9 @@ let listeners = [];
  * @class
  */
 let Prefs = {
-  init: function() {
+  init: function(data, unlist) {
+    initDefaultPrefs();
+    
     // Initialize prefs list
     let defaultBranch = this.defaultBranch;
     for each (let name in defaultBranch.getChildList("", {})) {
@@ -100,6 +97,8 @@ let Prefs = {
   
     // Register observers
     registerObservers();
+    
+    unlist.push([this.uninit, this]);
   },
   
   uninit: function() {
@@ -272,5 +271,3 @@ function defineStringProperty(/**String*/ name) {
       branch.setComplexValue(name, Ci.nsISupportsString, str);
     });
 }
-
-init();

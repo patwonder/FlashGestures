@@ -27,7 +27,7 @@
 
 var EXPORTED_SYMBOLS = ["PersistUI"];
 
-let positions = {};
+let positions = Object.create(null);
 
 let PersistUI = {
 

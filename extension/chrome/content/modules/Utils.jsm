@@ -39,9 +39,11 @@ let Utils = {
   _addonVersion: "0.1",
   _installPath: "",
   
-  init: function(data) {
+  init: function(data, unlist) {
     this._addonVersion = data.version;
     this._installPath = data.installPath.path;
+    
+    unlist.push([this.uninit, this]);
   },
   
   uninit: function() {
