@@ -78,7 +78,9 @@ function startup(data, reason) {
 
 function shutdown(data, reason) {
   revForEach(uninitFuncs, function(func) {
-    func[0].call(func[1]);
+    try {
+      func[0].call(func[1]);
+    } catch (ex) { }
   });
   uninitFuncs = [];
   revForEach(moduleList, function(url) {
