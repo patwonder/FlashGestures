@@ -27,8 +27,9 @@ function startup(data, reason) {
   Cu.import(moduleURIPrefix + "Utils.jsm");
   Utils.init(data);
   
-  Cu.import(moduleURIPrefix + "AppIntegration.jsm");
+  Cu.import(moduleURIPrefix + "Prefs.jsm");
   Cu.import(moduleURIPrefix + "Hook.jsm");
+  Cu.import(moduleURIPrefix + "AppIntegration.jsm");
 
   forEachOpenWindow(loadIntoWindow);
   Services.wm.addListener(WindowListener);
@@ -46,10 +47,11 @@ function shutdown(data, reason) {
   Services.wm.removeListener(WindowListener);
   forEachOpenWindow(unloadFromWindow);
   
-  Cu.unload(moduleURIPrefix + "Hook.jsm");
-  Cu.unload(moduleURIPrefix + "AppIntegration.jsm");
-  
   Utils.uninit();
+
+  Cu.unload(moduleURIPrefix + "AppIntegration.jsm");
+  Cu.unload(moduleURIPrefix + "Hook.jsm");
+  Cu.unload(moduleURIPrefix + "Prefs.jsm");
   Cu.unload(moduleURIPrefix + "Utils.jsm");
 
   // HACK WARNING: The Addon Manager does not properly clear all addon related caches on update;

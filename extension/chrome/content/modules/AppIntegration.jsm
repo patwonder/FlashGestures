@@ -30,6 +30,7 @@ const moduleURIPrefix = "chrome://flashgestures/content/modules/";
 
 Cu.import(moduleURIPrefix + "Utils.jsm");
 Cu.import(moduleURIPrefix + "Hook.jsm");
+Cu.import(moduleURIPrefix + "Prefs.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -37,14 +38,17 @@ Cu.import(moduleURIPrefix + "Hook.jsm");
  */
 let wrappers = [];
 
-
 /**
  * Globally referable name in the application window's context
  */
 let globalName = "gFlashGestures";
 
 function init() {
-  
+  // Listen for pref changes
+  Prefs.addListener(function(name) {
+    if (name == "enabled")
+      AppIntegration.reloadPrefs();
+  });
 }
 
 /**
@@ -92,6 +96,17 @@ let AppIntegration = {
   getAnyWrapper: function() {
     return wrappers.length ? wrapper[0] : null;
   },
+  
+  /**
+   * Updates displayed status for all application windows (on prefs or rules
+   * change).
+   */
+  reloadPrefs: function() {
+    for each(let wrapper in wrappers)
+      wrapper.updateState();
+    
+    updateHookState();
+  },
 };
 
 function WindowWrapper(window) {
@@ -118,8 +133,10 @@ WindowWrapper.prototype = {
     this.window.addEventListener("PluginInstantiated", onPluginEvent, true);
     this._listenersAdded = true;
     
-    Utils.LOG("Doing initial hooking.");
-    Hook.install();
+    if (Prefs.enabled) {
+      Utils.LOG("Doing initial hooking...");
+      Hook.install();
+    }
   },
   
   /**
@@ -132,6 +149,18 @@ WindowWrapper.prototype = {
     this.window.removeEventListener("focus", onFocus, true);
     this._listenersAdded = false;
   },
+  
+  updateState: function() {
+    this.updateInterface();
+  },
+  
+  updateInterface: function() {
+    Utils.scheduleThrottledUpdate(this._updateInterfaceCore, this);
+  },
+  
+  _updateInterfaceCore: function() {
+    
+  },
 };
 
 let timers = [];
@@ -141,6 +170,21 @@ function clearPendingTimers() {
     Utils.cancelAsyncTimeout(timer);
   });
   timers = [];
+}
+
+let previousHookState = Prefs.enabled;
+
+function updateHookState() {
+  if (Prefs.enabled == previousHookState)
+    return;
+  previousHookState = Prefs.enabled;
+  if (Prefs.enabled) {
+    Utils.LOG("Installing hooks... (prefs enable)");
+    Hook.install();
+  } else {
+    Utils.LOG("Uninstalling hooks... (prefs disable)");
+    Hook.uninstall();
+  }
 }
 
 function onPluginEvent(event) {
@@ -162,13 +206,17 @@ function onPluginEvent(event) {
   for (let timeout = 0; timeout <= MaxLoadingTimeMillis; timeout += HookTimeoutStep) {
     timers.push(Utils.runAsyncTimeout(function(timeout, timer) {
       Utils.removeOneItem(timers, timer);
-      Utils.LOG("Doing async hooking, timeout = " + timeout);
-      Hook.install();
+      if (Prefs.enabled) {
+        Utils.LOG("Doing async hooking, timeout = " + timeout);
+        Hook.install();
+      }
     }, null, timeout, timeout));
   }
 }
 
 function onFocus(event) {
+  if (!Prefs.enabled) return;
+  
   var target = event.target;
   if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
     Utils.LOG("Fixing window focus...");
@@ -198,6 +246,8 @@ function copyMouseEvent(window, event) {
 }
 
 function onMouseDown(event) {
+  if (!Prefs.enabled) return;
+  
   var target = event.target;
   if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
     let evt = copyMouseEvent(this.window, event);
