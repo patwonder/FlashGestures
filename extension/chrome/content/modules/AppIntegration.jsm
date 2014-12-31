@@ -33,6 +33,7 @@ Cu.import(moduleURIPrefix + "Utils.jsm");
 Cu.import(moduleURIPrefix + "Hook.jsm");
 Cu.import(moduleURIPrefix + "Prefs.jsm");
 Cu.import(moduleURIPrefix + "PersistUI.jsm");
+Cu.import(moduleURIPrefix + "Localization.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -263,11 +264,11 @@ WindowWrapper.prototype = {
       
       let tooltip = this._toggleButtonTooltip1;
       if (!Hook.initialized) {
-        tooltip.setAttribute("value", "Flash Gestures failed to load. See the Browser Console (Ctrl-Shift-J) for details.");
+        tooltip.setAttribute("value", L10n.getString("tooltip.failToLoad"));
       } else if (state) {
-        tooltip.setAttribute("value", "Flash Gestures is enabled.");
+        tooltip.setAttribute("value", L10n.getString("tooltip.enabled"));
       } else {
-        tooltip.setAttribute("value", "Flash Gestures is disabled.");
+        tooltip.setAttribute("value", L10n.getString("tooltip.disabled"));
       }
     }
   },

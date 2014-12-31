@@ -25,6 +25,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 let moduleList = [
   moduleURIPrefix + "Utils.jsm",
+  moduleURIPrefix + "Localization.jsm",
   moduleURIPrefix + "Prefs.jsm",
   moduleURIPrefix + "Hook.jsm",
   moduleURIPrefix + "PersistUI.jsm",
