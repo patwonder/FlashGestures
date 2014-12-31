@@ -29,6 +29,7 @@ function startup(data, reason) {
   
   Cu.import(moduleURIPrefix + "Prefs.jsm");
   Cu.import(moduleURIPrefix + "Hook.jsm");
+  Cu.import(moduleURIPrefix + "PersistUI.jsm");
   Cu.import(moduleURIPrefix + "AppIntegration.jsm");
 
   forEachOpenWindow(loadIntoWindow);
@@ -47,9 +48,12 @@ function shutdown(data, reason) {
   Services.wm.removeListener(WindowListener);
   forEachOpenWindow(unloadFromWindow);
   
+  AppIntegration.uninit();
+  Prefs.uninit();
   Utils.uninit();
 
   Cu.unload(moduleURIPrefix + "AppIntegration.jsm");
+  Cu.unload(moduleURIPrefix + "PersistUI.jsm");
   Cu.unload(moduleURIPrefix + "Hook.jsm");
   Cu.unload(moduleURIPrefix + "Prefs.jsm");
   Cu.unload(moduleURIPrefix + "Utils.jsm");

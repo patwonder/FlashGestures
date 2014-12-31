@@ -28,9 +28,11 @@ const Cr = Components.results;
 const Cu = Components.utils;
 const moduleURIPrefix = "chrome://flashgestures/content/modules/";
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import(moduleURIPrefix + "Utils.jsm");
 Cu.import(moduleURIPrefix + "Hook.jsm");
 Cu.import(moduleURIPrefix + "Prefs.jsm");
+Cu.import(moduleURIPrefix + "PersistUI.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -41,14 +43,12 @@ let wrappers = [];
 /**
  * Globally referable name in the application window's context
  */
-let globalName = "gFlashGestures";
+const globalName = "gFlashGestures";
+
+const stylesheetURL = "chrome://flashgestures/skin/main.css";
 
 function init() {
-  // Listen for pref changes
-  Prefs.addListener(function(name) {
-    if (name == "enabled")
-      AppIntegration.reloadPrefs();
-  });
+  AppIntegration.init();
 }
 
 /**
@@ -56,6 +56,22 @@ function init() {
  * @class
  */
 let AppIntegration = {
+  init: function() {
+    loadStylesheet();
+    
+    if (Hook.initialized) {
+      // Listen for pref changes
+      Prefs.addListener(function(name) {
+        if (name == "enabled")
+          AppIntegration.reloadPrefs();
+      });
+    }
+  },
+  
+  uninit: function() {
+    unloadStylesheet();
+  },
+  
   /**
    * Adds an application window to the tracked list.
    */
@@ -124,18 +140,42 @@ WindowWrapper.prototype = {
   Utils: null,
   
   /**
+   * Shorthand for getElementById
+   */
+  E: function(id) {
+    let doc = this.window.document;
+    this.E = function(id) doc.getElementById(id);
+    return this.E(id);
+  },
+  
+  /**
+   * Shorthand for createElementNS
+   */
+  CE: function(tag) {
+    return this.window.document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", tag);
+  },
+  
+  /**
    * Inject stuff into the wrapped window
    */
   load: function() {
-    if (!Hook.initialized) return;
-    this.window.addEventListener("focus", onFocus, true);
-    this.window.addEventListener("mousedown", this._onMouseDown = onMouseDown.bind(this), true);
-    this.window.addEventListener("PluginInstantiated", onPluginEvent, true);
-    this._listenersAdded = true;
+    try {
+      this._addToolbarButton();
+    } catch (ex) {
+      Utils.ERROR("Failed to add toolbar button: " + ex);
+    }
+    this.updateInterface();
     
-    if (Prefs.enabled) {
-      Utils.LOG("Doing initial hooking...");
-      Hook.install();
+    if (Hook.initialized) {
+      this.window.addEventListener("focus", onFocus, true);
+      this.window.addEventListener("mousedown", this._onMouseDown = onMouseDown.bind(this), true);
+      this.window.addEventListener("PluginInstantiated", onPluginEvent, true);
+      this._listenersAdded = true;
+      
+      if (Prefs.enabled) {
+        Utils.LOG("Doing initial hooking...");
+        Hook.install();
+      }
     }
   },
   
@@ -143,11 +183,63 @@ WindowWrapper.prototype = {
    * Remove stuff from the wrapped window
    */
   unload: function() {
-    if (!this._listenersAdded) return;
-    this.window.removeEventListener("PluginInstantiated", onPluginEvent, true);
-    this.window.removeEventListener("mousedown", this._onMouseDown, true);
-    this.window.removeEventListener("focus", onFocus, true);
-    this._listenersAdded = false;
+    try {
+      this._removeToolbarButton();
+    } catch (ex) {
+      Utils.ERROR("Failed to remove toolbar button: " + ex);
+    }
+    if (this._listenersAdded) {
+      this.window.removeEventListener("PluginInstantiated", onPluginEvent, true);
+      this.window.removeEventListener("mousedown", this._onMouseDown, true);
+      this.window.removeEventListener("focus", onFocus, true);
+      this._listenersAdded = false;
+    }
+  },
+  
+  _addToolbarButton: function() {
+    let button = this._toggleButton = this.CE("toolbarbutton");
+    button.setAttribute("id", "flashgestures-toggle-button");
+    button.setAttribute("label","Flash Gestures");
+    button.className = "toolbarbutton-1 chromeclass-toolbar-additional";
+    button.setAttribute("oncommand", globalName + ".toggle()");
+    button.setAttribute("tooltip", "flashgestures-toggle-button-tooltip")
+      
+    let tooltip = this._toggleButtonTooltip = this.CE("tooltip");
+    tooltip.setAttribute("id", "flashgestures-toggle-button-tooltip");
+    tooltip.setAttribute("noautohide", "true");
+    let label = this._toggleButtonTooltip1 = this.CE("label");
+    label.setAttribute("id", "flashgestures-toggle-button-tooltip1");
+    tooltip.appendChild(label);
+    this.E("nav-bar").appendChild(tooltip);
+
+    Utils.runAsync(function() {
+      if (!Prefs.toggleButtonAdded) {
+        this._addButtonToNavBar();
+        Prefs.toggleButtonAdded = true;
+      } else {
+        PersistUI.restorePosition(this.window.document, this._toggleButton, "navigator-toolbox");
+      }
+    }, this);
+  },
+  
+  _addButtonToNavBar: function() {
+    PersistUI.setDefaultPosition("flashgestures-toggle-button", "nav-bar", null);
+    PersistUI.restorePosition(this.window.document, this._toggleButton, "navigator-toolbox");
+    PersistUI.clearDefaultPosition("flashgestures-toggle-button");
+  },
+  
+  _removeToolbarButton: function() {
+    let button = this._toggleButton;
+    if (button)
+      button.parentElement.removeChild(button);
+    let tooltip = this._toggleButtonTooltip;
+    if (tooltip)
+      tooltip.parentElement.removeChild(tooltip);
+  },
+  
+  toggle: function() {
+    if (Hook.initialized)
+      Prefs.enabled = !Prefs.enabled;
   },
   
   updateState: function() {
@@ -159,9 +251,39 @@ WindowWrapper.prototype = {
   },
   
   _updateInterfaceCore: function() {
-    
+    let button = this._toggleButton;
+    if (button) {
+      let state = Hook.initialized && Prefs.enabled;
+      button.classList.toggle("hook-enabled", state);
+      button.disabled = !Hook.initialized;
+      
+      let tooltip = this._toggleButtonTooltip1;
+      if (!Hook.initialized) {
+        tooltip.setAttribute("value", "Flash Gestures failed to load. See the Browser Console (Ctrl-Shift-J) for details.");
+      } else if (state) {
+        tooltip.setAttribute("value", "Flash Gestures is enabled.");
+      } else {
+        tooltip.setAttribute("value", "Flash Gestures is disabled.");
+      }
+    }
   },
 };
+
+function loadStylesheet() {
+  let styleSheetService= Components.classes["@mozilla.org/content/style-sheet-service;1"]
+                                   .getService(Components.interfaces.nsIStyleSheetService);
+  let styleSheetURI = Services.io.newURI(stylesheetURL, null, null);
+  styleSheetService.loadAndRegisterSheet(styleSheetURI, styleSheetService.AUTHOR_SHEET);
+}
+
+function unloadStylesheet() {
+  let styleSheetService = Components.classes["@mozilla.org/content/style-sheet-service;1"]
+                                    .getService(Components.interfaces.nsIStyleSheetService);
+  let styleSheetURI = Services.io.newURI(stylesheetURL, null, null);
+  if (styleSheetService.sheetRegistered(styleSheetURI, styleSheetService.AUTHOR_SHEET)) {
+      styleSheetService.unregisterSheet(styleSheetURI, styleSheetService.AUTHOR_SHEET);
+  }  
+}
 
 let timers = [];
 

@@ -1,0 +1,23 @@
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
+
+@-moz-document url("chrome://browser/content/browser.xul") {
+  #flashgestures-toggle-button {
+    list-style-image: url("chrome://flashgestures/skin/icon-hook-disable.png");
+  }
+
+  #flashgestures-toggle-button[disabled="true"] {
+    opacity: 0.4;
+  }
+
+  #flashgestures-toggle-button.hook-enabled {
+    list-style-image: url("chrome://flashgestures/skin/icon-hook-enable.png");
+  }
+  
+  #flashgestures-toggle-button-tooltip {
+    padding: 2px;
+  }
+  
+  #flashgestures-toggle-button-tooltip label {
+    margin: 2px;
+  }
+}

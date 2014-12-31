@@ -101,6 +101,10 @@ let Prefs = {
     // Register observers
     registerObservers();
   },
+  
+  uninit: function() {
+    unregisterObservers();
+  },
 
   /**
    * Adds a preferences listener that will be fired whenever preferences are
@@ -160,6 +164,15 @@ function registerObservers() {
   try {
     branch.QueryInterface(Ci.nsIPrefBranch2)
           .addObserver("", PrefsPrivate, true);
+  } catch (e) {
+    Cu.reportError(e);
+  }
+}
+
+function unregisterObservers() {
+  try {
+    branch.QueryInterface(Ci.nsIPrefBranch2)
+          .removeObserver("", PrefsPrivate);
   } catch (e) {
     Cu.reportError(e);
   }
