@@ -18,6 +18,7 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 #include "stdafx.h"
 #include "ExportFunctionsInternal.h"
 #include "GestureHandler.h"
+#include "ThreadLocal.h"
 
 using namespace std;
 
@@ -292,15 +293,15 @@ bool ForwardZoomMessage(HWND hwndFirefox, MSG* pMsg) {
 }
 
 LRESULT CALLBACK GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam) {
-	static bool s_bReentranceGuard = false;
+	bool& bReentranceGuard = ThreadLocalStorage::getInstance().bGetMsgHookReentranceGuard;
 
-	if (nCode < 0 || s_bReentranceGuard) // Prevent reentrance problems caused by SendMessage
+	if (nCode < 0 || bReentranceGuard) // Prevent reentrance problems caused by SendMessage
 	{
-		if (s_bReentranceGuard)
+		if (bReentranceGuard)
 			ATLTRACE(_T("GetMsgHook WARNING: reentered.\n"));
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
-	s_bReentranceGuard = true;
+	bReentranceGuard = true;
 
 	if (wParam == PM_REMOVE && lParam) {
 		MSG * pMsg = reinterpret_cast<MSG *>(lParam);
@@ -340,6 +341,6 @@ LRESULT CALLBACK GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 Exit:
-	s_bReentranceGuard = false;
+	bReentranceGuard = false;
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }

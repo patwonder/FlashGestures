@@ -7,6 +7,7 @@
     <ClInclude Include="ExportFunctions.h" />
     <ClInclude Include="ExportFunctionsInternal.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="ThreadLocal.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -17,6 +18,7 @@
     <ClCompile Include="WindowManage.cpp" />
     <ClCompile Include="GetMsgHook.cpp" />
     <ClCompile Include="ExportFunctions.cpp" />
+    <ClCompile Include="ThreadLocal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FlashGesturesHook.def" />

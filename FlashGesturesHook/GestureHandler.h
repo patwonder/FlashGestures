@@ -25,18 +25,15 @@ enum GestureState {
 	GS_None, GS_Initiated, GS_Triggered
 };
 
+struct GestureHandlers;
+
 /* Abstract class that determines whether we should forward mouse gesture related messages */
 class GestureHandler {
 private:
 	bool shouldKeepTrack(MessageHandleResult res) const;
 	static bool shouldUsePost(HWND hTarget);
 
-	static struct Handlers {
-		~Handlers();
-		std::vector<GestureHandler*> m_vHandlers;
-	} s_handlers;
-
-	static std::vector<GestureHandler*>& s_vHandlers;
+	friend struct GestureHandlers;
 protected:
 	GestureState m_state;
 	bool m_bEnabled;

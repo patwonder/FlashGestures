@@ -17,6 +17,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 #include "GestureHandler.h"
+#include "ThreadLocal.h"
 
 class TraceHandler : public GestureHandler {
 private:
@@ -212,10 +213,12 @@ MessageHandleResult WheelHandler::handleMessageInternal(MSG* pMsg) {
 }
 
 const std::vector<GestureHandler*>& GestureHandler::getHandlers() {
-	if (s_vHandlers.size() == 0) {
-		s_vHandlers.push_back(new TraceHandler());
-		s_vHandlers.push_back(new RockerHandler());
-		s_vHandlers.push_back(new WheelHandler());
+	auto& vHandlers = ThreadLocalStorage::getInstance().gestureHandlers.m_vHandlers;
+	if (vHandlers.size() == 0) {
+		vHandlers.push_back(new TraceHandler());
+		vHandlers.push_back(new RockerHandler());
+		vHandlers.push_back(new WheelHandler());
+		ATLTRACE(_T("Created gesture handlers.\n"));
 	}
-	return s_vHandlers;
+	return vHandlers;
 }

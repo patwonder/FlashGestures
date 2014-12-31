@@ -17,16 +17,16 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 #include "GestureHandler.h"
-
-GestureHandler::Handlers GestureHandler::s_handlers;
-std::vector<GestureHandler*>& GestureHandler::s_vHandlers = s_handlers.m_vHandlers;
+#include "ThreadLocal.h"
 
 // Automatically cleanup at program exit
-GestureHandler::Handlers::~Handlers() {
-	for (size_t i = 0; i < m_vHandlers.size(); i++)
-		delete m_vHandlers[i];
-	m_vHandlers.clear();
-	ATLTRACE(_T("Cleared gesture handlers.\n"));
+GestureHandlers::~GestureHandlers() {
+	if (m_vHandlers.size()) {
+		for (size_t i = 0; i < m_vHandlers.size(); i++)
+			delete m_vHandlers[i];
+		m_vHandlers.clear();
+		ATLTRACE(_T("Cleared gesture handlers.\n"));
+	}
 }
 
 GestureHandler::GestureHandler() :
