@@ -1,22 +1,29 @@
 Goal
 =============================
-Resolve mouse gestures usability problem on plugins like Adobe Flash.
+Resolve mouse gestures and hotkeys usability problem on plugins like Adobe Flash.
 
 Currently only supports Firefox.
 
 Status
 =============================
-Working prototype, with a bootstrapped (no restart) extension part.
-
-Supports OOP plugins and some in-process plugins.
-
-Protected mode of Adobe Flash Player is supported.
+The add-on currently has basic functionality:
+* Allow using mouse gestures on any type of plugins.
+* Support using Firefox hotkeys when plugins have focus.
+* Have a customizable toggle button.
+* Supports Win64, Win32 and WOW64 platforms.
 
 Build
 =============================
 Open FlashGestures.sln with Visual Studio 2013 and build the solution.
 
-After successful building, you will get the add-on file of the name FlashGestures32.xpi.
+After successful building, you will get the add-on file of the name FlashGestures32(64).xpi.
+
+To build a unified xpi containing both x86 and x64 binaries, you could either:
+* run tools/buildxpi-unified.bat after both builds are done.
+
+or
+
+* run tools/compile-and-build-unified.bat directly (requires MSBuild). This will first build the required binaries, and then package them.
 
 License
 =============================
