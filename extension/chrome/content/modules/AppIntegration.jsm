@@ -123,8 +123,9 @@ let AppIntegration = {
    * change).
    */
   reloadPrefs: function() {
-    for each(let wrapper in wrappers)
+    wrappers.forEach(function (wrapper) {
       wrapper.updateState();
+    });
     
     updateHookState();
   },
@@ -174,12 +175,13 @@ WindowWrapper.prototype = {
     if (Hook.initialized) {
       this.window.addEventListener("focus", onFocus, true);
       this.window.addEventListener("mousedown", this._onMouseDown = onMouseDown.bind(this), true);
-      this.window.addEventListener("PluginInstantiated", onPluginEvent, true);
+      this.window.addEventListener("PluginInstantiated", this._onPluginEvent = onPluginEvent.bind(this), true);
       this._listenersAdded = true;
       
       if (Prefs.enabled) {
         Utils.LOG("Doing initial hooking...");
         Hook.install();
+        this.checkAndFixFocus();
       }
     }
   },
@@ -194,7 +196,7 @@ WindowWrapper.prototype = {
       Utils.ERROR("Failed to remove toolbar button: " + ex);
     }
     if (this._listenersAdded) {
-      this.window.removeEventListener("PluginInstantiated", onPluginEvent, true);
+      this.window.removeEventListener("PluginInstantiated", this._onPluginEvent, true);
       this.window.removeEventListener("mousedown", this._onMouseDown, true);
       this.window.removeEventListener("focus", onFocus, true);
       this._listenersAdded = false;
@@ -272,6 +274,19 @@ WindowWrapper.prototype = {
       }
     }
   },
+  
+  checkAndFixFocus: function() {
+    let cd = this.window.document.commandDispatcher;
+    if (cd) {
+      let focused = cd.focusedElement;
+      if (focused instanceof Ci.nsIObjectLoadingContent) {
+        // Bypass the running plugin check here as this function
+        // will only be called limited times.
+        Utils.LOG("Focus seems incorrect, fixing it...");
+        Hook.blurAndFocus(focused);
+      }
+    }
+  },
 };
 
 // Apply a function to all open browser windows
@@ -333,6 +348,9 @@ function updateHookState() {
   if (Prefs.enabled) {
     Utils.LOG("Installing hooks... (prefs enable)");
     Hook.install();
+    wrappers.forEach(function (wrapper) {
+      wrapper.checkAndFixFocus();
+    });
   } else {
     Utils.LOG("Uninstalling hooks... (prefs disable)");
     Hook.uninstall();
@@ -364,6 +382,10 @@ function onPluginEvent(event) {
       }
     }, null, timeout, timeout));
   }
+  
+  // Should also fix focus (due to click-to-play)
+  if (Prefs.enabled)
+    this.checkAndFixFocus();
 }
 
 function onFocus(event) {
