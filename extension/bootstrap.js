@@ -99,8 +99,8 @@ function install(data, reason) { }
 
 function uninstall(data,reason) {
   if (reason == ADDON_UNINSTALL) {
-    console.log("LOG [FlashGestures] Uninstal detected, resetting critical prefs.");
-    Services.prefs.setBoolPref("extensions.flashgestures.enabled", true);
-    Services.prefs.setBoolPref("extensions.flashgestures.toggleButtonAdded", false);
+    console.log("LOG [FlashGestures] Uninstall detected, resetting critical prefs.");
+    Services.prefs.clearUserPref("extensions.flashgestures.enabled");
+    Services.prefs.clearUserPref("extensions.flashgestures.toggleButtonAdded");
   }
 }
