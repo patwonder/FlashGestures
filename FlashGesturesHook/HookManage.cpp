@@ -146,7 +146,7 @@ bool UninstallAllHooks() {
 }
 
 unsigned int __stdcall HookManageThread(void* vpStartEvent) {
-	HANDLE hStartEvent = (HANDLE)vpStartEvent;
+	HANDLE hStartEvent = reinterpret_cast<HANDLE>(vpStartEvent);
 	if (!SetEvent(hStartEvent)) {
 		ATLTRACE(_T("ERROR: cannot set start event, last error = %d\n"), GetLastError());
 		ATLASSERT(false);
@@ -154,7 +154,7 @@ unsigned int __stdcall HookManageThread(void* vpStartEvent) {
 	}
 	// Pump a message-wait loop
 	while (true) {
-		DWORD nCount = g_vThreadsToWait.size();
+		DWORD nCount = (DWORD)g_vThreadsToWait.size();
 		if (nCount >= MAXIMUM_WAIT_OBJECTS)
 			nCount = MAXIMUM_WAIT_OBJECTS - 1;
 		DWORD ret = MsgWaitForMultipleObjects(nCount, nCount ? &g_vThreadsToWait[0] : NULL, FALSE, INFINITE, QS_ALLINPUT);
