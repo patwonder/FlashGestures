@@ -26,6 +26,7 @@ using namespace std;
 bool g_bIsInProcessPlugin = false;
 
 DWORD g_idMainThread = 0;
+DWORD g_idCurrentProcess = 0;
 uintptr_t g_hHookManageThread = 0;
 unsigned int g_idHookManagerThread = 0;
 
@@ -48,6 +49,16 @@ const UINT USERMESSAGE_INSTALL_HOOK = WM_USER + 20;
 const UINT USERMESSAGE_UNINSTALL_HOOK = WM_USER + 21;
 const UINT USERMESSAGE_EXIT_THREAD = WM_USER + 22;
 
+bool IsInCurrentProcess(DWORD idThread) {
+	HANDLE hThread = OpenThread(THREAD_QUERY_INFORMATION, FALSE, idThread);
+	if (hThread == NULL)
+		return false;
+	DWORD idProcess = GetProcessIdOfThread(hThread);
+	CloseHandle(hThread);
+
+	return g_idCurrentProcess == idProcess;
+}
+
 bool InstallHookForThread(DWORD idThread) {
 #ifdef _DEBUG
 	HANDLE hThread = OpenThread(THREAD_QUERY_INFORMATION, FALSE, idThread);
@@ -61,8 +72,8 @@ bool InstallHookForThread(DWORD idThread) {
 	CloseHandle(hProcess);
 #endif
 
-	HHOOK hhook = idThread == g_idMainThread
-		? SetWindowsHookEx(WH_GETMESSAGE, GetMsgHook, NULL, g_idMainThread)
+	HHOOK hhook = IsInCurrentProcess(idThread)
+		? SetWindowsHookEx(WH_GETMESSAGE, GetMsgHook, NULL, idThread)
 		: SetWindowsHookEx(WH_GETMESSAGE, GetMsgHook, g_hThisModule, idThread);
 	if (hhook != NULL) {
 		g_mapHookByThreadId[idThread] = hhook;
@@ -209,6 +220,8 @@ bool __stdcall Initialize() {
 	g_bIsInProcessPlugin = true;
 
 	g_idMainThread = GetCurrentThreadId();
+	g_idCurrentProcess = GetCurrentProcessId();
+
 	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
 		reinterpret_cast<LPCWSTR>(Initialize), &g_hThisModule))
 	{
