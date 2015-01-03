@@ -23,7 +23,7 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace std;
 
-bool g_bIsInProcessPlugin = false;
+bool g_bIsInProcessHook = false;
 
 DWORD g_idMainThread = 0;
 DWORD g_idCurrentProcess = 0;
@@ -217,7 +217,7 @@ bool __stdcall Initialize() {
 	if (g_idMainThread)
 		return true;
 
-	g_bIsInProcessPlugin = true;
+	g_bIsInProcessHook = true;
 
 	g_idMainThread = GetCurrentThreadId();
 	g_idCurrentProcess = GetCurrentProcessId();

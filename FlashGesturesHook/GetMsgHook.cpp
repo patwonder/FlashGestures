@@ -22,7 +22,8 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace std;
 
-extern bool g_bIsInProcessPlugin;
+extern bool g_bIsInProcessHook;
+extern DWORD g_idCurrentProcess;
 
 template <class T, class R>
 int ArrayFind(const T* arrayBegin, int arrayLength, const R& toFind) {
@@ -31,6 +32,14 @@ int ArrayFind(const T* arrayBegin, int arrayLength, const R& toFind) {
 			return i;
 	}
 	return -1;
+}
+
+bool IsInProcessWindow(HWND hwnd) {
+	if (!g_bIsInProcessHook) return false;
+
+	DWORD idProcess = 0;
+	GetWindowThreadProcessId(hwnd, &idProcess);
+	return idProcess == g_idCurrentProcess;
 }
 
 //
@@ -85,7 +94,7 @@ HWND VerifyAndGetTopMozillaWindowClassWindow(HWND hwndChild) {
 	CString intermediateClassName;
 	HWND hwndIntermediate = 
 		GetParentWindowForAnyClassName(hwndChild, targetPluginWindowClassNames,
-		g_bIsInProcessPlugin ? nTargetPluginWindowClassNamesInProcess : nTargetPluginWindowClassNames,
+		IsInProcessWindow(hwndChild) ? nTargetPluginWindowClassNamesInProcess : nTargetPluginWindowClassNames,
 		10, intermediateClassName);
 	if (!hwndIntermediate)
 		return NULL;
