@@ -146,6 +146,12 @@ WindowWrapper.prototype = {
   Utils: null,
   
   /**
+   * Keep track of registered mouseup/mousemove listeners
+   */
+  _onMouseUpListeners: [],
+  _onMouseMoveListeners: [],
+  
+  /**
    * Shorthand for getElementById
    */
   E: function(id) {
@@ -175,6 +181,8 @@ WindowWrapper.prototype = {
     if (Hook.initialized) {
       this.window.addEventListener("focus", onFocus, true);
       this.window.addEventListener("mousedown", this._onMouseDown = onMouseDown.bind(this), true);
+      this.window.addEventListener("mouseup", this._onMouseUp = onMouseUp.bind(this), true);
+      this.window.addEventListener("mousemove", this._onMouseMove = onMouseMove.bind(this), true);
       this.window.addEventListener("PluginInstantiated", this._onPluginEvent = onPluginEvent.bind(this), true);
       this._listenersAdded = true;
       
@@ -197,6 +205,8 @@ WindowWrapper.prototype = {
     }
     if (this._listenersAdded) {
       this.window.removeEventListener("PluginInstantiated", this._onPluginEvent, true);
+      this.window.removeEventListener("mousemove", this._onMouseMove, true);
+      this.window.removeEventListener("mouseup", this._onMouseUp, true);
       this.window.removeEventListener("mousedown", this._onMouseDown, true);
       this.window.removeEventListener("focus", onFocus, true);
       this._listenersAdded = false;
@@ -420,17 +430,105 @@ function copyMouseEvent(window, event) {
 }
 
 function onMouseDown(event) {
-  if (!Prefs.enabled) return;
+  if (this._onMouseDownSimulating || !Prefs.enabled) return;
   
   let target = event.target;
   if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
-    let evt = copyMouseEvent(this.window, event);
+    let upperLayerEvent = copyMouseEvent(this.window, event);
     
     if (event.buttons & 0x2) {
+      // For right clicks, we create a shadow event that is dispatched 
+      // to the original target if the following conditions are met:
+      // 1) a corresponding mouseup event is fired within 500ms
+      // 2) the mouseup event is fired on the target
+      // 3) the mouseup event is fired at a position close to the original event
+      const IntervalThreshold = 300;
+      const DistanceThreshold = 10;
+
+      Utils.LOG("mousedown rightbutton, screenX = " + event.screenX + ", screenY = " + event.screenY);
+
+      let cancelTimer = null;
+      let onMouseMoveLocal = null;
+      let downClientX = event.clientX;
+      let downClientY = event.clientY;
+
+      let onMouseUpLocal = function(upEvent) {
+        if (upEvent.button !== 2) return;
+        
+        Utils.LOG("mouseup rightbutton, screenX = " + upEvent.screenX + ", screenY = " + upEvent.screenY);
+        Utils.removeOneItem(this._onMouseUpListeners, onMouseUpLocal);
+        Utils.removeOneItem(this._onMouseMoveListeners, onMouseMoveLocal);
+        Utils.cancelAsyncTimeout(cancelTimer);
+        
+        if (upEvent.target === target &&
+            Math.abs(downClientX - upEvent.clientX) <= DistanceThreshold &&
+            Math.abs(downClientY - upEvent.clientY) <= DistanceThreshold)
+        {
+          upEvent.preventDefault();
+          upEvent.stopPropagation();
+          let upperLayerUpEvent = copyMouseEvent(this.window, upEvent);
+          getSafeParent(target).dispatchEvent(upperLayerUpEvent);
+          this._onMouseDownSimulating = true;
+          try {
+            let domWindowUtils =
+              target.ownerDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                                              .getInterface(Ci.nsIDOMWindowUtils);
+            let x = upEvent.clientX;
+            let y = upEvent.clientY;
+            domWindowUtils.sendMouseEventToWindow("mousedown", x, y, 2, 1, 0, false);
+            domWindowUtils.sendMouseEventToWindow("mouseup", x, y, 2, 1, 0, false);
+          } finally {
+            this._onMouseDownSimulating = false;
+          }
+        }
+      }.bind(this);
+      this._onMouseUpListeners.push(onMouseUpLocal);
+
+      let cancel = function() {
+        Utils.removeOneItem(this._onMouseUpListeners, onMouseUpLocal);
+        Utils.removeOneItem(this._onMouseMoveListeners, onMouseMoveLocal);
+        Utils.cancelAsyncTimeout(cancelTimer);
+      }.bind(this);
+      
+      cancelTimer = Utils.runAsyncTimeout(function() {
+        Utils.LOG("cancel mouseup listener (timeout)");
+        cancel();
+      }, this, IntervalThreshold);
+      
+      onMouseMoveLocal = function(moveEvent) {
+        if (Math.abs(downClientX - moveEvent.clientX) <= DistanceThreshold &&
+            Math.abs(downClientY - moveEvent.clientY) <= DistanceThreshold)
+        return;
+        
+        Utils.LOG("cancel mouseup listener (from mousemove listener)");
+        cancel();
+      };
+      this._onMouseMoveListeners.push(onMouseMoveLocal);
+      
       event.preventDefault();
       event.stopPropagation();
     }
-    
-    getSafeParent(target).dispatchEvent(evt);
-  }  
+
+    getSafeParent(target).dispatchEvent(upperLayerEvent);
+  }
+}
+
+function onMouseUp(event) {
+  this._onMouseUpListeners.slice().forEach(function(listener) {
+    try {
+      listener(event);
+    } catch (ex) {
+      Utils.ERROR(ex.stack);
+    }
+  });
+}
+
+function onMouseMove(event) {
+  this._onMouseMoveListeners.slice().forEach(function(listener) {
+    try {
+      listener(event);
+    } catch (ex) {
+      Utils.ERROR(ex);
+    }
+  });
 }
