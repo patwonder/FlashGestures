@@ -400,9 +400,6 @@ function onPluginEvent(event) {
   // We're expecting the target to be a plugin.
   if (!(plugin instanceof Ci.nsIObjectLoadingContent))
     return;
-    
-  Utils.LOG(event.type + " triggered on <" + plugin.localName + "> with mime-type \"" +
-            plugin.getAttribute("type") + "\"");
 
   // Do async hook installing. The relavant plugin processes should be ready
   // in no more than 10 seconds
@@ -471,8 +468,6 @@ function onMouseDown(event) {
       const IntervalThreshold = 300;
       const DistanceThreshold = 10;
 
-      Utils.LOG("mousedown rightbutton, screenX = " + event.screenX + ", screenY = " + event.screenY);
-
       let cancelTimer = null;
       let onMouseMoveLocal = null;
       let downClientX = event.clientX;
@@ -481,7 +476,6 @@ function onMouseDown(event) {
       let onMouseUpLocal = function(upEvent) {
         if (upEvent.button !== 2) return;
         
-        Utils.LOG("mouseup rightbutton, screenX = " + upEvent.screenX + ", screenY = " + upEvent.screenY);
         Utils.removeOneItem(this._onMouseUpListeners, onMouseUpLocal);
         Utils.removeOneItem(this._onMouseMoveListeners, onMouseMoveLocal);
         Utils.cancelAsyncTimeout(cancelTimer);
@@ -517,7 +511,6 @@ function onMouseDown(event) {
       }.bind(this);
       
       cancelTimer = Utils.runAsyncTimeout(function() {
-        Utils.LOG("cancel mouseup listener (timeout)");
         cancel();
       }, this, IntervalThreshold);
       
@@ -526,7 +519,6 @@ function onMouseDown(event) {
             Math.abs(downClientY - moveEvent.clientY) <= DistanceThreshold)
         return;
         
-        Utils.LOG("cancel mouseup listener (from mousemove listener)");
         cancel();
       };
       this._onMouseMoveListeners.push(onMouseMoveLocal);
