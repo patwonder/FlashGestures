@@ -42,11 +42,18 @@ Cu.import(moduleURIPrefix + "Localization.jsm");
 let wrappers = [];
 
 /**
+ * Timers from Utils.runAsyncTimeout
+ * @type Array of nsITimer
+ */
+let timers = [];
+
+/**
  * Globally referable name in the application window's context
  */
 const globalName = "gFlashGestures";
 
 const stylesheetURL = "chrome://flashgestures/skin/main.css";
+const forceWindowedFlashPlayerStylesheetURL = "chrome://flashgestures/content/ForceWindowedFlash.css";
 
 /**
  * Exported app integration functions.
@@ -54,7 +61,9 @@ const stylesheetURL = "chrome://flashgestures/skin/main.css";
  */
 let AppIntegration = {
   init: function(data, unlist) {
-    loadStylesheet();
+    loadStylesheet(stylesheetURL);
+    if (Prefs.forceWindowedFlashPlayer)
+      loadStylesheet(forceWindowedFlashPlayerStylesheetURL);
     
     if (Hook.initialized) {
       // Listen for pref changes
@@ -62,6 +71,7 @@ let AppIntegration = {
         if (name == "enabled")
           AppIntegration.reloadPrefs();
       });
+      registerPrefChangeHandlers();
     }
     
     forEachOpenWindow(this.addWindow, this);
@@ -74,7 +84,9 @@ let AppIntegration = {
     Services.wm.removeListener(WindowListener);
     forEachOpenWindow(this.removeWindow, this);
 
-    unloadStylesheet();
+    if (Prefs.forceWindowedFlashPlayer)
+      unloadStylesheet(forceWindowedFlashPlayerStylesheetURL);
+    unloadStylesheet(stylesheetURL);
   },
   
   /**
@@ -126,8 +138,6 @@ let AppIntegration = {
     wrappers.forEach(function (wrapper) {
       wrapper.updateState();
     });
-    
-    updateHookState();
   },
 };
 
@@ -324,23 +334,21 @@ let WindowListener = {
   onWindowTitleChange: function(xulWindow, newTitle) { }
 };
 
-function loadStylesheet() {
+function loadStylesheet(url) {
   let styleSheetService= Components.classes["@mozilla.org/content/style-sheet-service;1"]
                                    .getService(Components.interfaces.nsIStyleSheetService);
-  let styleSheetURI = Services.io.newURI(stylesheetURL, null, null);
-  styleSheetService.loadAndRegisterSheet(styleSheetURI, styleSheetService.AUTHOR_SHEET);
+  let uri = Services.io.newURI(url, null, null);
+  styleSheetService.loadAndRegisterSheet(uri, styleSheetService.AUTHOR_SHEET);
 }
 
-function unloadStylesheet() {
+function unloadStylesheet(url) {
   let styleSheetService = Components.classes["@mozilla.org/content/style-sheet-service;1"]
                                     .getService(Components.interfaces.nsIStyleSheetService);
-  let styleSheetURI = Services.io.newURI(stylesheetURL, null, null);
-  if (styleSheetService.sheetRegistered(styleSheetURI, styleSheetService.AUTHOR_SHEET)) {
-      styleSheetService.unregisterSheet(styleSheetURI, styleSheetService.AUTHOR_SHEET);
+  let uri = Services.io.newURI(url, null, null);
+  if (styleSheetService.sheetRegistered(uri, styleSheetService.AUTHOR_SHEET)) {
+      styleSheetService.unregisterSheet(uri, styleSheetService.AUTHOR_SHEET);
   }  
 }
-
-let timers = [];
 
 function clearPendingTimers() {
   timers.forEach(function(timer) {
@@ -349,13 +357,8 @@ function clearPendingTimers() {
   timers = [];
 }
 
-let previousHookState = Prefs.enabled;
-
-function updateHookState() {
-  if (Prefs.enabled == previousHookState)
-    return;
-  previousHookState = Prefs.enabled;
-  if (Prefs.enabled) {
+function updateHookState(newState) {
+  if (newState) {
     Utils.LOG("Installing hooks... (prefs enable)");
     Hook.install();
     wrappers.forEach(function (wrapper) {
@@ -365,6 +368,21 @@ function updateHookState() {
     Utils.LOG("Uninstalling hooks... (prefs disable)");
     Hook.uninstall();
   }
+}
+
+function updateForceWindowedFlashPlayerState(newState) {
+  if (newState) {
+    Utils.LOG("Registering ForceWindowedFlash.css...");
+    loadStylesheet(forceWindowedFlashPlayerStylesheetURL);
+  } else {
+    Utils.LOG("Unregistering ForceWindowedFlash.css...");
+    unloadStylesheet(forceWindowedFlashPlayerStylesheetURL);
+  }
+}
+
+function registerPrefChangeHandlers() {
+  Prefs.registerPrefChangeHandler("enabled", updateHookState);
+  Prefs.registerPrefChangeHandler("forceWindowedFlashPlayer", updateForceWindowedFlashPlayerState);
 }
 
 function onPluginEvent(event) {
@@ -377,7 +395,10 @@ function onPluginEvent(event) {
   // We're expecting the target to be a plugin.
   if (!(plugin instanceof Ci.nsIObjectLoadingContent))
     return;
-  
+    
+  Utils.LOG(event.type + " triggered on <" + plugin.localName + "> with mime-type \"" +
+            plugin.getAttribute("type") + "\"");
+
   // Do async hook installing. The relavant plugin processes should be ready
   // in no more than 10 seconds
   let MaxLoadingTimeMillis = 10000;

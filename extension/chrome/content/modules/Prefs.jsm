@@ -65,7 +65,8 @@ let branch = Services.prefs.getBranch(prefRoot);
  * List of listeners to be notified whenever preferences are updated
  * @type Array of Function
  */
-let listeners = [];
+let globalListeners = [];
+let prefChangeListenersMap = Object.create(null);
 
 /**
  * This object allows easy access to Flash Gestures' preferences, all defined
@@ -110,18 +111,18 @@ let Prefs = {
    * reloaded
    */
   addListener: function(/**Function*/ listener) {
-    let index = listeners.indexOf(listener);
+    let index = globalListeners.indexOf(listener);
     if (index < 0)
-      listeners.push(listener);
+      globalListeners.push(listener);
   },
   
   /**
    * Removes a preferences listener
    */
   removeListener: function(/**Function*/ listener) {
-    let index = listeners.indexOf(listener);
+    let index = globalListeners.indexOf(listener);
     if (index >= 0)
-      listeners.splice(index, 1);
+      globalListeners.splice(index, 1);
   },
 
   /**
@@ -135,6 +136,7 @@ let Prefs = {
    * Reset a pref to its default value.
    */
   reset: function(name) {
+    let defaultBranch = this.defaultBranch;
     let type = defaultBranch.getPrefType(name);
     switch (type) {
     case Ci.nsIPrefBranch.PREF_INT:
@@ -147,6 +149,26 @@ let Prefs = {
       this[name] = defaultBranch.getComplexValue(name, Ci.nsISupportsString).data;
       break;
     }
+  },
+  
+  /**
+   * Register a handler that handles pref changing events
+   */
+  registerPrefChangeHandler: function(name, handler) {
+    if (this.defaultBranch.getPrefType(name) === Ci.nsIPrefBranch.PREF_INVALID)
+      throw new Exception("Cannot register pref change handler for non-existing prefs.");
+    
+    let listeners = prefChangeListenersMap[name] || (prefChangeListenersMap[name] = []);
+    listeners.push(handler);
+  },
+  
+  /**
+   * Unregister a previously-registered pref change handler
+   */
+  unregisterPrefChangeHandler: function(name, handler) {
+    let listeners = prefChangeListenersMap[name];
+    if (listeners)
+      Utils.removeOneItem(listeners, handler);
   },
 };
 
@@ -199,13 +221,23 @@ function unregisterObservers() {
  * Triggers preference listeners whenever a preference is changed.
  */
 function triggerListeners(/**String*/ name) {
-  listeners.slice().forEach(function(listener) {
+  globalListeners.slice().forEach(function(listener) {
     try {
       listener(name);
     } catch (ex) {
       Utils.ERROR("Failed to call listeners for Prefs." + name + ": " + ex);
     }
   });
+  let prefChangeListeners = prefChangeListenersMap[name];
+  if (prefChangeListeners) {
+    prefChangeListeners.slice().forEach(function(listener) {
+      try {
+        listener(Prefs[name]);
+      } catch (ex) {
+        Utils.ERROR("Failed to call pref change listeners for Prefs." + name + ": " + ex);
+      }
+    });
+  }
 }
 
 /**
@@ -217,8 +249,8 @@ function defineProperty(/**String*/ name, defaultValue, /**Function*/ readFunc, 
     try {
       value = readFunc();
       triggerListeners(name);
-    } catch(e) {
-      Cu.reportError(e);
+    } catch(ex) {
+      Utils.ERROR("Prefs." + name + " _update_ exception: " + ex);
     }
   }
   Object.defineProperty(Prefs, name, {
@@ -232,8 +264,8 @@ function defineProperty(/**String*/ name, defaultValue, /**Function*/ readFunc, 
         writeFunc(newValue);
         value = newValue;
         triggerListeners(name);
-      } catch(e) {
-        Cu.reportError(e);
+      } catch(ex) {
+        Utils.ERROR("Prefs." + name + " setter exception: " + ex);
       } finally {
         PrefsPrivate.ignorePrefChanges = false;
       }

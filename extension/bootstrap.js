@@ -47,7 +47,7 @@ function loadModule(url) {
   try {
     Cu.import(url, module);
   } catch (ex) {
-    Utils.ERROR("Failed to load module " + url + ": " + ex);
+    Cu.reportError("[FlashGestures] Failed to load module " + url + ": " + ex + "\n" + ex.stack);
     return;
   }
 
@@ -59,7 +59,8 @@ function loadModule(url) {
       try {
         obj.init(initData, uninitFuncs);
       } catch (ex) {
-        Utils.ERROR("Calling method init() for module " + url + " failed: " + ex);
+        Cu.reportError("[FlashGestures] Calling method init() for module " + url + " failed: " +
+                       ex + "\n" + ex.stack);
       }
       return;
     }
@@ -99,7 +100,7 @@ function install(data, reason) { }
 
 function uninstall(data,reason) {
   if (reason == ADDON_UNINSTALL) {
-    console.log("LOG [FlashGestures] Uninstall detected, resetting critical prefs.");
+    // Reset critical prefs on uninstall
     Services.prefs.clearUserPref("extensions.flashgestures.enabled");
     Services.prefs.clearUserPref("extensions.flashgestures.toggleButtonAdded");
   }

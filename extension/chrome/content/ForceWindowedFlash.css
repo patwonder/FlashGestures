@@ -1,0 +1,7 @@
+@namespace url(http://www.w3.org/1999/xhtml);
+
+object[type="application/x-shockwave-flash"]:not(.flashgestures-forced-window),
+embed[type="application/x-shockwave-flash"]:not(.flashgestures-forced-window)
+{
+  -moz-binding: url("chrome://flashgestures/content/bindings.xml#forceWindowedFlashPlayer") !important;
+}
