@@ -9,6 +9,8 @@
   <em:description>Use your favorite mouse gesture add-on on Flash Players.</em:description>
   <em:creator>Yifan Wu</em:creator>
   <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
+  <em:optionsURL>chrome://flashgestures/content/options.xul</em:optionsURL>
+  <em:optionsType>2</em:optionsType>
   <em:iconURL>chrome://flashgestures/skin/icon.png</em:iconURL>
   <em:targetPlatform>WINNT</em:targetPlatform>
   <em:unpack>true</em:unpack>
@@ -29,7 +31,7 @@
       <em:name>Flash Gestures</em:name>
       <em:creator>Yifan Wu</em:creator>
       <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
-      <em:description>Use your favorite mouse gesture add-on on Flash Players.</em:description>
+      <em:description>Use your favorite mouse gesture add-on and Firefox hotkeys on plugins like Flash Player.</em:description>
     </Description>
   </em:localized>
 
@@ -39,7 +41,7 @@
       <em:name>Flash Gestures</em:name>
       <em:creator>Yifan Wu</em:creator>
       <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
-      <em:description>在Flash播放器上使用您喜爱的鼠标手势扩展。</em:description>
+      <em:description>在 Flash 播放器等插件上使用您喜爱的鼠标手势扩展和 Firefox 快捷键。</em:description>
     </Description>
   </em:localized>
 
