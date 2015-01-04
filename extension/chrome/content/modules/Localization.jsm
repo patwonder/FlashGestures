@@ -42,7 +42,10 @@ let Localization = L10n = {
     unlist.push([this.uninit, this]);
   },
   
-  uninit: function() { },
+  uninit: function() {
+    // no need to call Services.strings.flushBundles since we send
+    // "chrome-flush-caches" global observer topic on shutdown
+  },
   
   getString: function(name) {
     return this._strings.GetStringFromName(name);
