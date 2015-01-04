@@ -66,7 +66,24 @@ let branch = Services.prefs.getBranch(prefRoot);
  * @type Array of Function
  */
 let globalListeners = [];
+
+/**
+ * Map of list of listeners to be notified whenever preferences are updated
+ * @type Map from String (pref name) to Array of Function
+ */
 let prefChangeListenersMap = Object.create(null);
+
+/**
+ * List of custom listeners to be notified whenever a custom evaluator returned a new value
+ * @type Array of CustomListener objects
+ */
+let customListeners = [];
+
+function CustomListener(value, evaluator, handler) {
+  this.value = value;
+  this.evaluator = evaluator;
+  this.handler = handler;
+}
 
 /**
  * This object allows easy access to Flash Gestures' preferences, all defined
@@ -170,6 +187,28 @@ let Prefs = {
     if (listeners)
       Utils.removeOneItem(listeners, handler);
   },
+  
+  /**
+   * Register a handler that handles custom pref changing events
+   * @param evaluator - a custom evaluator function. When the return value of this function
+   * changes, the handler is invoked.
+   */
+  registerCustomPrefChangeHandler: function(evaluator, handler) {
+    let originalValue = evaluator();
+    customListeners.push(new CustomListener(originalValue, evaluator, handler));
+  },
+  
+  /**
+   * Unregister a previously-registered custom pref change handler
+   */
+  unregisterCustomPrefChangeHandler: function(evaluator, handler) {
+    for (let i = 0, l = customListeners.length; i < l; i++) {
+      if (customListeners[i].evaluator === evaluator && customListeners[i].handler === handler) {
+        customListeners.splice(i, 1);
+        break;
+      }
+    }
+  },
 };
 
 /**
@@ -238,6 +277,17 @@ function triggerListeners(/**String*/ name) {
       }
     });
   }
+  customListeners.slice().forEach(function(customListener) {
+    let newValue = customListener.evaluator();
+    if (newValue !== customListener.value) {
+      try {
+        customListener.handler(newValue);
+      } catch (ex) {
+        Utils.ERROR("Failed to call custom pref change listeners for Prefs." + name + ": " + ex);
+      }
+      customListener.value = newValue;
+    }
+  });
 }
 
 /**

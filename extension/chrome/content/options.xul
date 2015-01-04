@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE pref SYSTEM "chrome://flashgestures/locale/pref.dtd">
+
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <setting type="bool" pref="extensions.flashgestures.enabled"
+           title="&pref.enabled.title;" desc="&pref.enabled.desc;" />
+  <setting type="bool" pref="extensions.flashgestures.forceWindowedFlashPlayer"
+           title="&pref.forceWindowedFlashPlayer.title;"
+           desc="&pref.forceWindowedFlashPlayer.desc;" />
+</vbox>

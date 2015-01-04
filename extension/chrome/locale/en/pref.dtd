@@ -1,0 +1,4 @@
+<!ENTITY pref.enabled.title "Enable Flash Gestures">
+<!ENTITY pref.enabled.desc "Enable Flash Gestures' features, allowing you to use mouse gestures and firefox hotkeys on plugins like Flash Player.">
+<!ENTITY pref.forceWindowedFlashPlayer.title "Force Flash Player to use windowed mode">
+<!ENTITY pref.forceWindowedFlashPlayer.desc "If you can't type text in some Flash Player, try enable this option (may cause rendering glitches).">
