@@ -19,7 +19,6 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ExportFunctionsInternal.h"
 #include <unordered_map>
-#include <unordered_set>
 
 using namespace std;
 
@@ -256,5 +255,10 @@ void __stdcall UninstallHook() {
 void __stdcall Uninitialize() {
 	if (!PostThreadMessage((DWORD)g_idHookManagerThread, USERMESSAGE_EXIT_THREAD, 0, 0))
 		ATLTRACE(_T("ERROR: PostThreadMessage(USERMESSAGE_EXIT_THREAD) failed, last error = %d\n"), GetLastError());
-	WaitForSingleObject(reinterpret_cast<HANDLE>(g_hHookManageThread), INFINITE);
+	HANDLE hHookManageThread = reinterpret_cast<HANDLE>(g_hHookManageThread);
+	WaitForSingleObject(hHookManageThread, INFINITE);
+	CloseHandle(hHookManageThread);
+
+	// Re-initialize? Probably
+	g_idMainThread = 0;
 }
