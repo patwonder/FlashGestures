@@ -49,17 +49,7 @@ const UINT USERMESSAGE_INSTALL_HOOK = WM_USER + 20;
 const UINT USERMESSAGE_UNINSTALL_HOOK = WM_USER + 21;
 const UINT USERMESSAGE_EXIT_THREAD = WM_USER + 22;
 
-bool IsInCurrentProcess(DWORD idThread) {
-	HANDLE hThread = OpenThread(THREAD_QUERY_INFORMATION, FALSE, idThread);
-	if (hThread == NULL)
-		return false;
-	DWORD idProcess = GetProcessIdOfThread(hThread);
-	CloseHandle(hThread);
-
-	return g_idCurrentProcess == idProcess;
-}
-
-bool InstallHookForThread(DWORD idThread) {
+bool InstallHookForThread(DWORD idThread, DWORD idProcess) {
 #ifdef _DEBUG
 	HANDLE hThread = OpenThread(THREAD_QUERY_INFORMATION, FALSE, idThread);
 	DWORD idProcess = GetProcessIdOfThread(hThread);
@@ -72,7 +62,7 @@ bool InstallHookForThread(DWORD idThread) {
 	CloseHandle(hProcess);
 #endif
 
-	HHOOK hhook = IsInCurrentProcess(idThread)
+	HHOOK hhook = idProcess == g_idCurrentProcess
 		? SetWindowsHookEx(WH_GETMESSAGE, GetMsgHook, NULL, idThread)
 		: SetWindowsHookEx(WH_GETMESSAGE, GetMsgHook, g_hThisModule, idThread);
 	if (hhook != NULL) {
@@ -108,16 +98,19 @@ vector<HWND> GetChildWindows() {
 
 bool InstallAllHooks() {
 	vector<HWND> vHWNDChildWindows = GetChildWindows();
-	unordered_set<DWORD> setIdThreadsToHook = { g_idMainThread };
+	unordered_map<DWORD, DWORD> mapIdThreadsToHook = { make_pair(g_idMainThread, g_idCurrentProcess) };
 	for (HWND hwnd : vHWNDChildWindows) {
-		DWORD threadId = GetWindowThreadProcessId(hwnd, NULL);
-		if (threadId)
-			setIdThreadsToHook.insert(threadId);
+		DWORD idProcess = 0;
+		DWORD idThread = GetWindowThreadProcessId(hwnd, &idProcess);
+		if (idThread)
+			mapIdThreadsToHook.insert(make_pair(idThread, idProcess));
 	}
 
-	for (DWORD idThread : setIdThreadsToHook) {
+	for (auto pair : mapIdThreadsToHook) {
+		DWORD idThread = pair.first;
+		DWORD idProcess = pair.second;
 		if (g_mapHookByThreadId.find(idThread) == g_mapHookByThreadId.end())
-			InstallHookForThread(idThread);
+			InstallHookForThread(idThread, idProcess);
 	}
 
 	g_vThreadsToWait.clear();
