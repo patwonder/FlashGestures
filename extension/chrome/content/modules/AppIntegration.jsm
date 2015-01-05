@@ -62,10 +62,6 @@ const forceWindowedFlashPlayerStylesheetURL = "chrome://flashgestures/content/Fo
 let AppIntegration = {
   init: function(data, unlist) {
     loadStylesheet(stylesheetURL);
-    if (Prefs.enabled && Prefs.forceWindowedFlashPlayer) {
-      Utils.LOG("Registering ForceWindowedFlash.css...");
-      loadStylesheet(forceWindowedFlashPlayerStylesheetURL);
-    }
     
     if (Hook.initialized) {
       // Listen for pref changes
@@ -74,6 +70,11 @@ let AppIntegration = {
           AppIntegration.reloadPrefs();
       });
       registerPrefChangeHandlers();
+      // Register ForceWindowedFlash.css only if hook is initialized
+      if (Prefs.enabled && Prefs.forceWindowedFlashPlayer) {
+        Utils.LOG("Registering ForceWindowedFlash.css...");
+        loadStylesheet(forceWindowedFlashPlayerStylesheetURL);
+      }
     }
     
     forEachOpenWindow(this.addWindow, this);
@@ -86,7 +87,7 @@ let AppIntegration = {
     Services.wm.removeListener(WindowListener);
     forEachOpenWindow(this.removeWindow, this);
 
-    if (Prefs.enabled && Prefs.forceWindowedFlashPlayer) {
+    if (Hook.initialized && Prefs.enabled && Prefs.forceWindowedFlashPlayer) {
       Utils.LOG("Unregistering ForceWindowedFlash.css...");
       unloadStylesheet(forceWindowedFlashPlayerStylesheetURL);
     }
