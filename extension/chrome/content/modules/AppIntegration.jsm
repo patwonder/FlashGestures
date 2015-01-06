@@ -231,7 +231,7 @@ WindowWrapper.prototype = {
   _addToolbarButton: function() {
     let button = this._toggleButton = this.CE("toolbarbutton");
     button.setAttribute("id", "flashgestures-toggle-button");
-    button.setAttribute("label","Flash Gestures");
+    button.setAttribute("label", L10n.getString("togglebutton.label"));
     button.className = "toolbarbutton-1 chromeclass-toolbar-additional";
     button.setAttribute("oncommand", globalName + ".toggle()");
     button.setAttribute("tooltip", "flashgestures-toggle-button-tooltip")
