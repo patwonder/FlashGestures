@@ -50,9 +50,6 @@ const UINT USERMESSAGE_EXIT_THREAD = WM_USER + 22;
 
 bool InstallHookForThread(DWORD idThread, DWORD idProcess) {
 #ifdef _DEBUG
-	HANDLE hThread = OpenThread(THREAD_QUERY_INFORMATION, FALSE, idThread);
-	DWORD idProcess = GetProcessIdOfThread(hThread);
-	CloseHandle(hThread);
 	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, idProcess);
 	CString fileName;
 	DWORD dwSize = MAX_PATH;
