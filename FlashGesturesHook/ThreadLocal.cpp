@@ -18,14 +18,57 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 #include "stdafx.h"
 
 #include "ThreadLocal.h"
+#include <unordered_set>
+
+using namespace std;
 
 extern DWORD g_dwTlsIndex;
+static unordered_set<ThreadLocalStorage*> g_setAllocatedTLS;
 
-ThreadLocalStorage& ThreadLocalStorage::getInstance() {
+class SimpleMutex {
+private:
+	CRITICAL_SECTION m_cs;
+public:
+	SimpleMutex() { InitializeCriticalSectionAndSpinCount(&m_cs, 4096); }
+	~SimpleMutex() { DeleteCriticalSection(&m_cs); }
+
+	void Lock() { EnterCriticalSection(&m_cs); }
+	void Unlock() { LeaveCriticalSection(&m_cs); }
+};
+class SimpleLock {
+private:
+	SimpleMutex& m_mtx;
+public:
+	SimpleLock(SimpleMutex& mtx) : m_mtx(mtx) { m_mtx.Lock(); }
+	~SimpleLock() { m_mtx.Unlock(); }
+};
+
+SimpleMutex g_mtxAllocatedTLS;
+
+ThreadLocalStorage::ThreadLocalStorage() : bGetMsgHookReentranceGuard(false) {
+	SimpleLock lock(g_mtxAllocatedTLS);
+	g_setAllocatedTLS.insert(this);
+}
+
+ThreadLocalStorage::~ThreadLocalStorage() {
+	SimpleLock lock(g_mtxAllocatedTLS);
+	g_setAllocatedTLS.erase(this);
+}
+
+ThreadLocalStorage& ThreadLocalStorage::GetInstance() {
 	ThreadLocalStorage* pData = reinterpret_cast<ThreadLocalStorage*>(TlsGetValue(g_dwTlsIndex));
 	if (pData == NULL) {
 		pData = new ThreadLocalStorage();
 		TlsSetValue(g_dwTlsIndex, reinterpret_cast<void*>(pData));
 	}
 	return *pData;
+}
+
+void ThreadLocalStorage::FreeAllInstances() {
+	SimpleLock lock(g_mtxAllocatedTLS);
+	ATLTRACE(_T("Freeing %d remaining TLS instance(s)...\n"), g_setAllocatedTLS.size());
+	for (ThreadLocalStorage* pTLS : g_setAllocatedTLS) {
+		delete pTLS;
+	}
+	g_setAllocatedTLS.clear();
 }

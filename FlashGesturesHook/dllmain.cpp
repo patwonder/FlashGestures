@@ -45,6 +45,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 		if (pData)
 			delete pData;
 		TlsFree(g_dwTlsIndex);
+		ThreadLocalStorage::FreeAllInstances();
 		break;
 	}
 	return TRUE;

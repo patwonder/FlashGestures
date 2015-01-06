@@ -302,7 +302,7 @@ bool ForwardZoomMessage(HWND hwndFirefox, MSG* pMsg) {
 }
 
 LRESULT CALLBACK GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam) {
-	bool& bReentranceGuard = ThreadLocalStorage::getInstance().bGetMsgHookReentranceGuard;
+	bool& bReentranceGuard = ThreadLocalStorage::GetInstance().bGetMsgHookReentranceGuard;
 
 	if (nCode < 0 || bReentranceGuard) // Prevent reentrance problems caused by SendMessage
 	{

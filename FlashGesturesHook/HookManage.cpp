@@ -145,6 +145,25 @@ bool UninstallAllHooks() {
 	return true;
 }
 
+void WakeUpMessageLoops() {
+	// Send all child windows a message to wake their message loop up
+	unordered_map<DWORD, HWND> mapThreadToHWND;
+	for (HWND hwnd : GetChildWindows()) {
+		DWORD idThread = GetWindowThreadProcessId(hwnd, NULL);
+		if (idThread && mapThreadToHWND.find(idThread) == mapThreadToHWND.end()) {
+			mapThreadToHWND.insert(make_pair(idThread, hwnd));
+		}
+	}
+	for (auto pair : mapThreadToHWND) {
+		// Do not disturb the main thread, it should be waiting for us (the hook manage thread)
+		if (pair.first == g_idMainThread)
+			continue;
+
+		HWND hwnd = pair.second;
+		SendMessageTimeout(hwnd, WM_NULL, 0, 0, SMTO_BLOCK | SMTO_ABORTIFHUNG, 200, NULL);
+	}
+}
+
 unsigned int __stdcall HookManageThread(void* vpStartEvent) {
 	HANDLE hStartEvent = reinterpret_cast<HANDLE>(vpStartEvent);
 	if (!SetEvent(hStartEvent)) {
@@ -172,6 +191,8 @@ unsigned int __stdcall HookManageThread(void* vpStartEvent) {
 					// Have we cleaned up yet?
 					if (g_mapHookByThreadId.size())
 						UninstallAllHooks();
+					// HACK: Wake child windows' message loop up so they'll have a chance to unload the dll
+					WakeUpMessageLoops();
 					// Never return again...
 					FreeLibraryAndExitThread(g_hThisModule, 0);
 					return 0;

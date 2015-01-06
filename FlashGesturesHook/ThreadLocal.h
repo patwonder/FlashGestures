@@ -27,7 +27,9 @@ struct ThreadLocalStorage {
 	GestureHandlers gestureHandlers;
 	bool bGetMsgHookReentranceGuard;
 
-	ThreadLocalStorage() : bGetMsgHookReentranceGuard(false) {}
+	ThreadLocalStorage();
+	~ThreadLocalStorage();
 
-	static ThreadLocalStorage& getInstance();
+	static ThreadLocalStorage& GetInstance();
+	static void FreeAllInstances();
 };
