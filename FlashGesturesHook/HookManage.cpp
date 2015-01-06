@@ -160,7 +160,8 @@ void WakeUpMessageLoops() {
 			continue;
 
 		HWND hwnd = pair.second;
-		SendMessageTimeout(hwnd, WM_NULL, 0, 0, SMTO_BLOCK | SMTO_ABORTIFHUNG, 200, NULL);
+		SendMessageTimeout(hwnd, WM_NULL, 0, 0,
+						   SMTO_BLOCK | SMTO_ABORTIFHUNG | SMTO_NOTIMEOUTIFNOTHUNG, 200, NULL);
 	}
 }
 
