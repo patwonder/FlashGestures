@@ -15,6 +15,7 @@
   <em:targetPlatform>WINNT</em:targetPlatform>
   <em:unpack>true</em:unpack>
   <em:bootstrap>true</em:bootstrap>
+  <em:multiprocessCompatible>true</em:multiprocessCompatible>
 
   <!-- Firefox -->
   <em:targetApplication>
