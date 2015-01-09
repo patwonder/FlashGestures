@@ -140,11 +140,10 @@ bool FilterFirefoxKey(int keyCode, bool bAltPressed, bool bCtrlPressed, bool bSh
 			return false;
 
 		// The following shortcut keys will be handle by the plugin only and won't be sent to Firefox
-		case 'P': // Ctrl+P, Print
 		case 'C': // Ctrl+C, Copy
 		case 'V': // Ctrl+V, Paste
 		case 'X': // Ctrl+X, Cut
-		case 'A': // Ctrl+A, Select ALl
+		case 'A': // Ctrl+A, Select All
 		case 'Z': // Ctrl+Z, undo
 		case 'Y': // Ctrl+Y, redo 
 		case VK_HOME: // Ctrl+HOME, Scroll to Top
