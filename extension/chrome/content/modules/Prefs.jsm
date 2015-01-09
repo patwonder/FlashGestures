@@ -37,8 +37,11 @@ const prefsURL = "chrome://flashgestures/content/preferences/FlashGestures.js";
 
 function initDefaultPrefs() {
   let branch = Services.prefs.getDefaultBranch("");
+  let prefs = Services.prefs;
   let prefLoaderScope = {
     pref: function(key, val) {
+      if (val === undefined) return;
+      
       switch (typeof val) {
       case "boolean":
         branch.setBoolPref(key, val);
@@ -50,6 +53,40 @@ function initDefaultPrefs() {
         branch.setCharPref(key, val);
         break;
       }
+    },
+    user: function(key, val) {
+      if (val === undefined) return;
+      
+      switch (typeof val) {
+      case "boolean":
+        prefs.setBoolPref(key, val);
+        break;
+      case "number":
+        prefs.setIntPref(key, val);
+        break;
+      case "string":
+        prefs.setCharPref(key, val);
+        break;
+      }
+    },
+    read: function(key) {
+      let type = prefs.getPrefType(key);
+      switch (type) {
+      case Ci.nsIPrefBranch.PREF_INT:
+        return prefs.getIntPref(key);
+      case Ci.nsIPrefBranch.PREF_BOOL:
+        return prefs.getBoolPref(key);
+      case Ci.nsIPrefBranch.PREF_STRING:
+        return prefs.getComplexValue(name, Ci.nsISupportsString).data;
+      default:
+        return undefined;
+      }
+    },
+    kill: function(key) {
+      if (prefs.getPrefType(key) === Ci.nsIPrefBranch.PREF_INVALID)
+        return;
+      
+      prefs.clearUserPref(key);
     }
   };
   Services.scriptloader.loadSubScript(prefsURL, prefLoaderScope);

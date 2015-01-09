@@ -5,7 +5,6 @@
 <vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <setting type="bool" pref="extensions.flashgestures.enabled"
            title="&pref.enabled.title;" desc="&pref.enabled.desc;" />
-  <setting type="bool" pref="extensions.flashgestures.forceWindowedFlashPlayer"
-           title="&pref.forceWindowedFlashPlayer.title;"
-           desc="&pref.forceWindowedFlashPlayer.desc;" />
+  <setting type="bool" pref="extensions.flashgestures.forceWindowed"
+           title="&pref.forceWindowed.title;" desc="&pref.forceWindowed.desc;" />
 </vbox>

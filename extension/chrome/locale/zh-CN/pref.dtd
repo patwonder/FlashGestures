@@ -1,4 +1,4 @@
 <!ENTITY pref.enabled.title "启用 Flash Gestures">
 <!ENTITY pref.enabled.desc "启用 Flash Gestures 的功能，使您能够在 Flash 播放器等插件上使用鼠标手势和 Firefox 快捷键。">
-<!ENTITY pref.forceWindowedFlashPlayer.title "强制 Flash 播放器使用窗口模式">
-<!ENTITY pref.forceWindowedFlashPlayer.desc "如果您无法在某些 Flash 播放器中输入文字，请尝试打开这个选项（可能会导致渲染瑕疵）。">
+<!ENTITY pref.forceWindowed.title "强制插件使用窗口模式">
+<!ENTITY pref.forceWindowed.desc "如果您无法在 Flash 播放器或者 Silverlight 插件中输入文字，请尝试打开这个选项（可能会导致渲染瑕疵）。">
