@@ -391,6 +391,12 @@ function registerPrefChangeHandlers() {
     updateForceWindowedFlashPlayerState);
 }
 
+function hasRunningPlugin(plugin) {
+  if (plugin.hasRunningPlugin || typeof(plugin.hasRunningPlugin) === "boolean")
+    return !!plugin.hasRunningPlugin;
+  return true;
+}
+
 function onPluginEvent(event) {
   // Only handle plugin instantiation events
   if (event.type != "PluginInstantiated")
@@ -426,7 +432,7 @@ function onFocus(event) {
   if (!Prefs.enabled) return;
   
   let target = event.target;
-  if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
+  if (target instanceof Ci.nsIObjectLoadingContent && hasRunningPlugin(target)) {
     Utils.LOG("Fixing window focus...");
     Hook.blurAndFocus(target);
   }
@@ -457,7 +463,7 @@ function onMouseDown(event) {
   if (this._onMouseDownSimulating || !Prefs.enabled) return;
   
   let target = event.target;
-  if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
+  if (target instanceof Ci.nsIObjectLoadingContent && hasRunningPlugin(target)) {
     let upperLayerEvent = copyMouseEvent(this.window, event);
     
     if (event.buttons & 0x2) {
