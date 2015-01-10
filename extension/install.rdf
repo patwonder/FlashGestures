@@ -30,7 +30,7 @@
       <em:locale>en</em:locale>
       <em:name>Flash Gestures</em:name>
       <em:creator>Yifan Wu</em:creator>
-	  <em:translator>shyangs (zh-TW)</em:translator>
+      <em:translator>shyangs (zh-TW)</em:translator>
       <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
       <em:description>Use your favorite mouse gesture add-on and Firefox hotkeys on plugins like Flash Player.</em:description>
     </Description>
@@ -41,7 +41,7 @@
       <em:locale>zh-CN</em:locale>
       <em:name>Flash Gestures</em:name>
       <em:creator>Yifan Wu</em:creator>
-	  <em:translator>shyangs (zh-TW)</em:translator>
+      <em:translator>shyangs (zh-TW)</em:translator>
       <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
       <em:description>在 Flash 播放器等插件上使用您喜爱的鼠标手势扩展和 Firefox 快捷键。</em:description>
     </Description>
