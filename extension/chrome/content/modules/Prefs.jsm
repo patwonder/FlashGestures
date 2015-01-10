@@ -36,7 +36,7 @@ const prefRoot = "extensions.flashgestures.";
 const prefsURL = "chrome://flashgestures/content/preferences/FlashGestures.js";
 
 function initDefaultPrefs() {
-  let branch = Services.prefs.getDefaultBranch("");
+  let defaultPrefs = Services.prefs.getDefaultBranch("");
   let prefs = Services.prefs;
   let prefLoaderScope = {
     pref: function(key, val) {
@@ -44,13 +44,13 @@ function initDefaultPrefs() {
       
       switch (typeof val) {
       case "boolean":
-        branch.setBoolPref(key, val);
+        defaultPrefs.setBoolPref(key, val);
         break;
       case "number":
-        branch.setIntPref(key, val);
+        defaultPrefs.setIntPref(key, val);
         break;
       case "string":
-        branch.setCharPref(key, val);
+        defaultPrefs.setCharPref(key, val);
         break;
       }
     },
@@ -70,6 +70,9 @@ function initDefaultPrefs() {
       }
     },
     read: function(key) {
+      if (!prefs.prefHasUserValue(key))
+        return undefined;
+    
       let type = prefs.getPrefType(key);
       switch (type) {
       case Ci.nsIPrefBranch.PREF_INT:
@@ -83,9 +86,6 @@ function initDefaultPrefs() {
       }
     },
     kill: function(key) {
-      if (prefs.getPrefType(key) === Ci.nsIPrefBranch.PREF_INVALID)
-        return;
-      
       prefs.clearUserPref(key);
     }
   };
@@ -131,7 +131,18 @@ let Prefs = {
   init: function(data, unlist) {
     initDefaultPrefs();
     
-    // Initialize prefs list
+    this._initPrefList();
+    registerObservers();
+    
+    unlist.push([this.uninit, this]);
+  },
+  
+  uninit: function() {
+    unregisterObservers();
+    clearDefaultPrefs();
+  },
+  
+  _initPrefList: function() {
     let defaultBranch = this.defaultBranch;
     for each (let name in defaultBranch.getChildList("", {})) {
       let type = defaultBranch.getPrefType(name);
@@ -149,15 +160,6 @@ let Prefs = {
       if ("_update_" + name in PrefsPrivate)
         PrefsPrivate["_update_" + name]();
     }
-  
-    // Register observers
-    registerObservers();
-    
-    unlist.push([this.uninit, this]);
-  },
-  
-  uninit: function() {
-    unregisterObservers();
   },
 
   /**
