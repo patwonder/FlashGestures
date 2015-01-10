@@ -320,6 +320,20 @@ LRESULT CALLBACK GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam) {
 			goto Exit;
 		}
 
+		// for WM_MOUSEMOVE, if none of the gesture handlers are initiated or triggered, 
+		// just exit here to avoid comparing window class names (improves performance)
+		if (pMsg->message == WM_MOUSEMOVE) {
+			bool bAllInactive = true;
+			const vector<GestureHandler*>& handlers = GestureHandler::getHandlers();
+			for (GestureHandler* pHandler : handlers) {
+				if (pHandler->getEnabled() && pHandler->getState() != GS_None) {
+					bAllInactive = false;
+					break;
+				}
+			}
+			if (bAllInactive) goto Exit;
+		}
+
 		// Get top MozillaWindowClass object from the window hierarchy
 		HWND hwndFirefox = VerifyAndGetTopMozillaWindowClassWindow(hwnd);
 		if (hwndFirefox == NULL) {
