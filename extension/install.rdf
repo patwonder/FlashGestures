@@ -45,5 +45,16 @@
     </Description>
   </em:localized>
 
+  <em:localized>
+    <Description>
+      <em:locale>zh-TW</em:locale>
+      <em:name>Flash Gestures</em:name>
+      <em:creator>Yifan Wu</em:creator>
+      <em:translator>shyangs</em:translator>
+      <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
+      <em:description>在 Flash Player 等嵌入網頁的外掛程式上使用您喜愛的滑鼠手勢擴充套件和 Firefox 熱鍵。</em:description>
+    </Description>
+  </em:localized>
+
 </Description>
 </RDF>
