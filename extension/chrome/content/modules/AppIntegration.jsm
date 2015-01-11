@@ -463,7 +463,7 @@ function onMouseDown(event) {
   if (this._onMouseDownSimulating || !Prefs.enabled) return;
   
   let target = event.target;
-  if (target instanceof Ci.nsIObjectLoadingContent && hasRunningPlugin(target)) {
+  if (target instanceof Ci.nsIObjectLoadingContent) {
     let upperLayerEvent = copyMouseEvent(this.window, event);
     
     if (event.buttons & 0x2) {
