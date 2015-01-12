@@ -195,7 +195,6 @@ unsigned int __stdcall HookManageThread(void* vpStartEvent) {
 					// HACK: Wake child windows' message loop up so they'll have a chance to unload the dll
 					WakeUpMessageLoops();
 					// Never return again...
-					FreeLibraryAndExitThread(g_hThisModule, 0);
 					return 0;
 				default:
 					break;
@@ -233,7 +232,7 @@ bool __stdcall Initialize() {
 	g_idMainThread = GetCurrentThreadId();
 	g_idCurrentProcess = GetCurrentProcessId();
 
-	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
 		reinterpret_cast<LPCWSTR>(Initialize), &g_hThisModule))
 	{
 		ATLTRACE(_T("ERROR: failed to get module handle, last error = %d\n"), GetLastError());
