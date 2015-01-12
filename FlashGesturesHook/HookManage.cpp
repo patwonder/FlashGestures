@@ -223,7 +223,7 @@ unsigned int __stdcall HookManageThread(void* vpStartEvent) {
 	}
 }
 
-bool __stdcall Initialize() {
+bool Initialize() {
 	if (g_idMainThread)
 		return true;
 
@@ -258,19 +258,19 @@ bool __stdcall Initialize() {
 	return true;
 }
 
-bool __stdcall InstallHook() {
+bool InstallHook() {
 	if (PostThreadMessage((DWORD)g_idHookManagerThread, USERMESSAGE_INSTALL_HOOK, 0, 0))
 		return true;
 	ATLTRACE(_T("ERROR: PostThreadMessage(USERMESSAGE_INSTALL_HOOK) failed, last error = %d\n"), GetLastError());
 	return false;
 }
 
-void __stdcall UninstallHook() {
+void UninstallHook() {
 	if (!PostThreadMessage((DWORD)g_idHookManagerThread, USERMESSAGE_UNINSTALL_HOOK, 0, 0))
 		ATLTRACE(_T("ERROR: PostThreadMessage(USERMESSAGE_UNINSTALL_HOOK) failed, last error = %d\n"), GetLastError());
 }
 
-void __stdcall Uninitialize() {
+void Uninitialize() {
 	if (!PostThreadMessage((DWORD)g_idHookManagerThread, USERMESSAGE_EXIT_THREAD, 0, 0))
 		ATLTRACE(_T("ERROR: PostThreadMessage(USERMESSAGE_EXIT_THREAD) failed, last error = %d\n"), GetLastError());
 	HANDLE hHookManageThread = reinterpret_cast<HANDLE>(g_hHookManageThread);

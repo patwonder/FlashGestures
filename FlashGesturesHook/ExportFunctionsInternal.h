@@ -17,12 +17,10 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-bool __stdcall Initialize();
-bool __stdcall InstallHook();
-void __stdcall UninstallHook();
-void __stdcall Uninitialize();
-
-LRESULT CALLBACK GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam);
-
+bool Initialize();
+bool InstallHook();
+void UninstallHook();
+void Uninitialize();
 void RecordFocusedWindow();
 void RestoreFocusedWindow();
+LRESULT CALLBACK GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam);

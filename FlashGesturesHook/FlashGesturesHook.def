@@ -2,7 +2,6 @@ EXPORTS
 	FGH_Initialize   @1
 	FGH_InstallHook   @2
 	FGH_UninstallHook   @3
-	FGH_GetMsgHook   @4
-	FGH_Uninitialize   @5
-	FGH_RecordFocusedWindow   @6
-	FGH_RestoreFocusedWindow   @7
+	FGH_Uninitialize   @4
+	FGH_RecordFocusedWindow   @5
+	FGH_RestoreFocusedWindow   @6
