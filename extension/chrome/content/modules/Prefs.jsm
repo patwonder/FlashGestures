@@ -279,8 +279,7 @@ let PrefsPrivate = {
 function registerObservers() {
   // Observe preferences changes
   try {
-    branch.QueryInterface(Ci.nsIPrefBranch2)
-          .addObserver("", PrefsPrivate, true);
+    branch.addObserver("", PrefsPrivate, true);
   } catch (e) {
     Cu.reportError(e);
   }
@@ -288,8 +287,7 @@ function registerObservers() {
 
 function unregisterObservers() {
   try {
-    branch.QueryInterface(Ci.nsIPrefBranch2)
-          .removeObserver("", PrefsPrivate);
+    branch.removeObserver("", PrefsPrivate);
   } catch (e) {
     Cu.reportError(e);
   }
