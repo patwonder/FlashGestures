@@ -139,7 +139,6 @@ let Prefs = {
   
   uninit: function() {
     unregisterObservers();
-    clearDefaultPrefs();
   },
   
   _initPrefList: function() {
