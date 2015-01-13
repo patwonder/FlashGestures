@@ -316,12 +316,12 @@ function triggerListeners(/**String*/ name) {
   customListeners.slice().forEach(function(customListener) {
     let newValue = customListener.evaluator();
     if (newValue !== customListener.value) {
+      customListener.value = newValue;
       try {
         customListener.handler(newValue);
       } catch (ex) {
         Utils.ERROR("Failed to call custom pref change listeners for Prefs." + name + ": " + ex);
       }
-      customListener.value = newValue;
     }
   });
 }
