@@ -469,7 +469,7 @@ function onMouseDown(event) {
     if (event.buttons & 0x2) {
       // For right clicks, we create a shadow event that is dispatched 
       // to the original target if the following conditions are met:
-      // 1) a corresponding mouseup event is fired within 500ms
+      // 1) a corresponding mouseup event is fired within 300ms
       // 2) the mouseup event is fired on the target
       // 3) the mouseup event is fired at a position close to the original event
       const IntervalThreshold = 300;
