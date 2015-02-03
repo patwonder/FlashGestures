@@ -221,8 +221,11 @@ let Utils = {
     
     update.scheduled = true;
     if (!update.delaying)
+    {
+      update.delaying = true;
       Utils.runAsync(this._doThrottledUpdate, this,
                      update, updateFunc, thisPtr);
+    }
   },
 };
 
