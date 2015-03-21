@@ -19,7 +19,7 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
  * @fileOverview Manages Flash Gestures preferences.
  */
 
- var EXPORTED_SYMBOLS = ["Prefs"];
+var EXPORTED_SYMBOLS = ["Prefs"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;

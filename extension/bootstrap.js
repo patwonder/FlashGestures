@@ -98,7 +98,7 @@ function shutdown(data, reason) {
 
 function install(data, reason) { }
 
-function uninstall(data,reason) {
+function uninstall(data, reason) {
   if (reason == ADDON_UNINSTALL) {
     // Reset critical prefs on uninstall
     Services.prefs.clearUserPref("extensions.flashgestures.enabled");
