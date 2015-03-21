@@ -53,7 +53,7 @@ let timers = [];
 const globalName = "gFlashGestures";
 
 const stylesheetURL = "chrome://flashgestures/skin/main.css";
-const forceWindowedFlashPlayerStylesheetURL = "chrome://flashgestures/content/ForceWindowedFlash.css";
+const forceWindowedStylesheetURL = "chrome://flashgestures/content/forceWindowed.css";
 
 /**
  * Exported app integration functions.
@@ -70,10 +70,10 @@ let AppIntegration = {
           AppIntegration.reloadPrefs();
       });
       registerPrefChangeHandlers();
-      // Register ForceWindowedFlash.css only if hook is initialized
-      if (Prefs.enabled && Prefs.forceWindowedFlashPlayer) {
-        Utils.LOG("Registering ForceWindowedFlash.css...");
-        loadStylesheet(forceWindowedFlashPlayerStylesheetURL);
+      // Register forceWindowed.css only if hook is initialized
+      if (Prefs.enabled && Prefs.forceWindowed) {
+        Utils.LOG("Registering forceWindowed.css...");
+        loadStylesheet(forceWindowedStylesheetURL);
       }
     }
     
@@ -87,9 +87,9 @@ let AppIntegration = {
     Services.wm.removeListener(WindowListener);
     forEachOpenWindow(this.removeWindow, this);
 
-    if (Hook.initialized && Prefs.enabled && Prefs.forceWindowedFlashPlayer) {
-      Utils.LOG("Unregistering ForceWindowedFlash.css...");
-      unloadStylesheet(forceWindowedFlashPlayerStylesheetURL);
+    if (Hook.initialized && Prefs.enabled && Prefs.forceWindowed) {
+      Utils.LOG("Unregistering forceWindowed.css...");
+      unloadStylesheet(forceWindowedStylesheetURL);
     }
     unloadStylesheet(stylesheetURL);
   },
@@ -375,20 +375,26 @@ function updateHookState(newState) {
   }
 }
 
-function updateForceWindowedFlashPlayerState(newState) {
+function updateForceWindowedState(newState) {
   if (newState) {
-    Utils.LOG("Registering ForceWindowedFlash.css...");
-    loadStylesheet(forceWindowedFlashPlayerStylesheetURL);
+    Utils.LOG("Registering forceWindowed.css...");
+    loadStylesheet(forceWindowedStylesheetURL);
   } else {
-    Utils.LOG("Unregistering ForceWindowedFlash.css...");
-    unloadStylesheet(forceWindowedFlashPlayerStylesheetURL);
+    Utils.LOG("Unregistering forceWindowed.css...");
+    unloadStylesheet(forceWindowedStylesheetURL);
   }
 }
 
 function registerPrefChangeHandlers() {
   Prefs.registerPrefChangeHandler("enabled", updateHookState);
-  Prefs.registerCustomPrefChangeHandler(function() Prefs.enabled && Prefs.forceWindowedFlashPlayer,
-    updateForceWindowedFlashPlayerState);
+  Prefs.registerCustomPrefChangeHandler(function() Prefs.enabled && Prefs.forceWindowed,
+    updateForceWindowedState);
+}
+
+function hasRunningPlugin(plugin) {
+  if (plugin.hasRunningPlugin || typeof(plugin.hasRunningPlugin) === "boolean")
+    return !!plugin.hasRunningPlugin;
+  return true;
 }
 
 function onPluginEvent(event) {
@@ -426,7 +432,7 @@ function onFocus(event) {
   if (!Prefs.enabled) return;
   
   let target = event.target;
-  if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
+  if (target instanceof Ci.nsIObjectLoadingContent && hasRunningPlugin(target)) {
     Utils.LOG("Fixing window focus...");
     Hook.blurAndFocus(target);
   }
@@ -457,13 +463,13 @@ function onMouseDown(event) {
   if (this._onMouseDownSimulating || !Prefs.enabled) return;
   
   let target = event.target;
-  if (target instanceof Ci.nsIObjectLoadingContent && target.hasRunningPlugin) {
+  if (target instanceof Ci.nsIObjectLoadingContent) {
     let upperLayerEvent = copyMouseEvent(this.window, event);
     
     if (event.buttons & 0x2) {
       // For right clicks, we create a shadow event that is dispatched 
       // to the original target if the following conditions are met:
-      // 1) a corresponding mouseup event is fired within 500ms
+      // 1) a corresponding mouseup event is fired within 300ms
       // 2) the mouseup event is fired on the target
       // 3) the mouseup event is fired at a position close to the original event
       const IntervalThreshold = 300;

@@ -1,15 +1,15 @@
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 @-moz-document url("chrome://browser/content/browser.xul") {
-  #flashgestures-toggle-button {
+  #flashgestures-toggle-button, #flashgestures-toggle-button > image {
     list-style-image: url("chrome://flashgestures/skin/icon-hook-disable.png");
   }
 
-  #flashgestures-toggle-button[disabled="true"] {
+  #flashgestures-toggle-button[disabled="true"], #flashgestures-toggle-button[disabled="true"] > image {
     opacity: 0.4;
   }
 
-  #flashgestures-toggle-button.hook-enabled {
+  #flashgestures-toggle-button.hook-enabled, #flashgestures-toggle-button.hook-enabled > image {
     list-style-image: url("chrome://flashgestures/skin/icon-hook-enable.png");
   }
   

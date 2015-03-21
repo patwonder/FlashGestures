@@ -195,7 +195,6 @@ unsigned int __stdcall HookManageThread(void* vpStartEvent) {
 					// HACK: Wake child windows' message loop up so they'll have a chance to unload the dll
 					WakeUpMessageLoops();
 					// Never return again...
-					FreeLibraryAndExitThread(g_hThisModule, 0);
 					return 0;
 				default:
 					break;
@@ -224,7 +223,7 @@ unsigned int __stdcall HookManageThread(void* vpStartEvent) {
 	}
 }
 
-bool __stdcall Initialize() {
+bool Initialize() {
 	if (g_idMainThread)
 		return true;
 
@@ -233,7 +232,7 @@ bool __stdcall Initialize() {
 	g_idMainThread = GetCurrentThreadId();
 	g_idCurrentProcess = GetCurrentProcessId();
 
-	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
 		reinterpret_cast<LPCWSTR>(Initialize), &g_hThisModule))
 	{
 		ATLTRACE(_T("ERROR: failed to get module handle, last error = %d\n"), GetLastError());
@@ -259,19 +258,19 @@ bool __stdcall Initialize() {
 	return true;
 }
 
-bool __stdcall InstallHook() {
+bool InstallHook() {
 	if (PostThreadMessage((DWORD)g_idHookManagerThread, USERMESSAGE_INSTALL_HOOK, 0, 0))
 		return true;
 	ATLTRACE(_T("ERROR: PostThreadMessage(USERMESSAGE_INSTALL_HOOK) failed, last error = %d\n"), GetLastError());
 	return false;
 }
 
-void __stdcall UninstallHook() {
+void UninstallHook() {
 	if (!PostThreadMessage((DWORD)g_idHookManagerThread, USERMESSAGE_UNINSTALL_HOOK, 0, 0))
 		ATLTRACE(_T("ERROR: PostThreadMessage(USERMESSAGE_UNINSTALL_HOOK) failed, last error = %d\n"), GetLastError());
 }
 
-void __stdcall Uninitialize() {
+void Uninitialize() {
 	if (!PostThreadMessage((DWORD)g_idHookManagerThread, USERMESSAGE_EXIT_THREAD, 0, 0))
 		ATLTRACE(_T("ERROR: PostThreadMessage(USERMESSAGE_EXIT_THREAD) failed, last error = %d\n"), GetLastError());
 	HANDLE hHookManageThread = reinterpret_cast<HANDLE>(g_hHookManageThread);

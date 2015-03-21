@@ -140,11 +140,10 @@ bool FilterFirefoxKey(int keyCode, bool bAltPressed, bool bCtrlPressed, bool bSh
 			return false;
 
 		// The following shortcut keys will be handle by the plugin only and won't be sent to Firefox
-		case 'P': // Ctrl+P, Print
 		case 'C': // Ctrl+C, Copy
 		case 'V': // Ctrl+V, Paste
 		case 'X': // Ctrl+X, Cut
-		case 'A': // Ctrl+A, Select ALl
+		case 'A': // Ctrl+A, Select All
 		case 'Z': // Ctrl+Z, undo
 		case 'Y': // Ctrl+Y, redo 
 		case VK_HOME: // Ctrl+HOME, Scroll to Top
@@ -169,11 +168,13 @@ bool FilterFirefoxKey(int keyCode, bool bAltPressed, bool bCtrlPressed, bool bSh
 			return true;
 		case VK_F4: // Shift-F4 opens Scratchpad which is very handy
 			return bShiftPressed;
-		case VK_F5: // Refresh
+		case VK_F5: // Refresh or Performance tab in Developer Tools (Shift-F5)
 			return true;
 		case VK_F6: // Locate the address bar
 			return !bShiftPressed;
 		case VK_F7: // Style Editor
+			return bShiftPressed;
+		case VK_F8: // Shift-F8 opens WebIDE
 			return bShiftPressed;
 		case VK_F10: // Locate the menu bar
 			return !bShiftPressed;
@@ -319,6 +320,20 @@ LRESULT CALLBACK GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam) {
 		// here we only handle keyboard messages and mouse button messages
 		if (!(WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST) && !(WM_MOUSEFIRST <= pMsg->message && pMsg->message <= WM_MOUSELAST) || hwnd == NULL) {
 			goto Exit;
+		}
+
+		// for WM_MOUSEMOVE, if none of the gesture handlers are initiated or triggered, 
+		// just exit here to avoid comparing window class names (improves performance)
+		if (pMsg->message == WM_MOUSEMOVE) {
+			bool bAllInactive = true;
+			const vector<GestureHandler*>& handlers = GestureHandler::getHandlers();
+			for (GestureHandler* pHandler : handlers) {
+				if (pHandler->getEnabled() && pHandler->getState() != GS_None) {
+					bAllInactive = false;
+					break;
+				}
+			}
+			if (bAllInactive) goto Exit;
 		}
 
 		// Get top MozillaWindowClass object from the window hierarchy

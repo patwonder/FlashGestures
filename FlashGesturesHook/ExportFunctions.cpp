@@ -19,14 +19,9 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 #include "ExportFunctions.h"
 #include "ExportFunctionsInternal.h"
 
-bool __stdcall FGH_Initialize() { return Initialize(); }
-bool __stdcall FGH_InstallHook() { return InstallHook(); }
-void __stdcall FGH_UninstallHook() { return UninstallHook(); }
-void __stdcall FGH_Uninitialize() { return Uninitialize(); }
-
-LRESULT CALLBACK FGH_GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam) {
-	return GetMsgHook(nCode, wParam, lParam);
-}
-
-void FGH_RecordFocusedWindow() { return RecordFocusedWindow(); }
-void FGH_RestoreFocusedWindow() { return RestoreFocusedWindow(); }
+bool ADDON_ABI FGH_Initialize() { return Initialize(); }
+bool ADDON_ABI FGH_InstallHook() { return InstallHook(); }
+void ADDON_ABI FGH_UninstallHook() { return UninstallHook(); }
+void ADDON_ABI FGH_Uninitialize() { return Uninitialize(); }
+void ADDON_ABI FGH_RecordFocusedWindow() { return RecordFocusedWindow(); }
+void ADDON_ABI FGH_RestoreFocusedWindow() { return RestoreFocusedWindow(); }

@@ -18,8 +18,8 @@
         //console.log("[FlashGestures] Flash player detected, wmode = " + (wmode || "(default)"));
         
         wmode = wmode.toLowerCase();
-        let preferredWmode = "direct";
         if (wmode === "opaque" || wmode === "transparent") {
+          let preferredWmode = "direct";
           if (plugin.hasAttribute("wmode")) {
             plugin.setAttribute("wmode", preferredWmode);
           } else {
@@ -40,6 +40,34 @@
         // to be attached to plugin elements. See
         // https://ask.mozilla.org/question/297/apply-and-remove-xbl-binding-on-runtime/
         // for details.
+        plugin.classList.add("flashgestures-forced-window");
+      ]]>
+      </constructor>
+    </implementation>
+  </binding>
+  <binding id="forceWindowedSilverlight" bindToUntrustedContent="true">
+    <implementation>
+      <constructor>
+      <![CDATA[
+        let plugin = this;
+        let windowless = plugin.getAttribute("windowless") || (function() {
+          let param = plugin.querySelector("param[name=\"windowless\"]");
+          return param ? param.getAttribute("value") : "";
+        })();
+        
+        windowless = windowless.toLowerCase();
+        if (windowless === "true") {
+          let preferredWindowless = "false";
+          if (plugin.hasAttribute("windowless")) {
+            plugin.setAttribute("windowless", preferredWindowless);
+          } else {
+            let param = plugin.querySelector("param[name=\"windowless\"]");
+            if (param)
+              param.setAttribute("value", preferredWindowless);
+          }
+        }
+        
+        // Self-unbinding
         plugin.classList.add("flashgestures-forced-window");
       ]]>
       </constructor>

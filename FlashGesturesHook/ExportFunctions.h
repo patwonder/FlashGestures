@@ -17,12 +17,11 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-bool __stdcall FGH_Initialize();
-bool __stdcall FGH_InstallHook();
-void __stdcall FGH_UninstallHook();
-void __stdcall FGH_Uninitialize();
+#define ADDON_ABI __stdcall
 
-LRESULT CALLBACK FGH_GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam);
-
-void FGH_RecordFocusedWindow();
-void FGH_RestoreFocusedWindow();
+bool ADDON_ABI FGH_Initialize();
+bool ADDON_ABI FGH_InstallHook();
+void ADDON_ABI FGH_UninstallHook();
+void ADDON_ABI FGH_Uninitialize();
+void ADDON_ABI FGH_RecordFocusedWindow();
+void ADDON_ABI FGH_RestoreFocusedWindow();

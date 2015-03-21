@@ -36,20 +36,57 @@ const prefRoot = "extensions.flashgestures.";
 const prefsURL = "chrome://flashgestures/content/preferences/FlashGestures.js";
 
 function initDefaultPrefs() {
-  let branch = Services.prefs.getDefaultBranch("");
+  let defaultPrefs = Services.prefs.getDefaultBranch("");
+  let prefs = Services.prefs;
   let prefLoaderScope = {
     pref: function(key, val) {
+      if (val === undefined) return;
+      
       switch (typeof val) {
       case "boolean":
-        branch.setBoolPref(key, val);
+        defaultPrefs.setBoolPref(key, val);
         break;
       case "number":
-        branch.setIntPref(key, val);
+        defaultPrefs.setIntPref(key, val);
         break;
       case "string":
-        branch.setCharPref(key, val);
+        defaultPrefs.setCharPref(key, val);
         break;
       }
+    },
+    user: function(key, val) {
+      if (val === undefined) return;
+      
+      switch (typeof val) {
+      case "boolean":
+        prefs.setBoolPref(key, val);
+        break;
+      case "number":
+        prefs.setIntPref(key, val);
+        break;
+      case "string":
+        prefs.setCharPref(key, val);
+        break;
+      }
+    },
+    read: function(key) {
+      if (!prefs.prefHasUserValue(key))
+        return undefined;
+    
+      let type = prefs.getPrefType(key);
+      switch (type) {
+      case Ci.nsIPrefBranch.PREF_INT:
+        return prefs.getIntPref(key);
+      case Ci.nsIPrefBranch.PREF_BOOL:
+        return prefs.getBoolPref(key);
+      case Ci.nsIPrefBranch.PREF_STRING:
+        return prefs.getComplexValue(name, Ci.nsISupportsString).data;
+      default:
+        return undefined;
+      }
+    },
+    kill: function(key) {
+      prefs.clearUserPref(key);
     }
   };
   Services.scriptloader.loadSubScript(prefsURL, prefLoaderScope);
@@ -94,7 +131,17 @@ let Prefs = {
   init: function(data, unlist) {
     initDefaultPrefs();
     
-    // Initialize prefs list
+    this._initPrefList();
+    registerObservers();
+    
+    unlist.push([this.uninit, this]);
+  },
+  
+  uninit: function() {
+    unregisterObservers();
+  },
+  
+  _initPrefList: function() {
     let defaultBranch = this.defaultBranch;
     for each (let name in defaultBranch.getChildList("", {})) {
       let type = defaultBranch.getPrefType(name);
@@ -112,15 +159,6 @@ let Prefs = {
       if ("_update_" + name in PrefsPrivate)
         PrefsPrivate["_update_" + name]();
     }
-  
-    // Register observers
-    registerObservers();
-    
-    unlist.push([this.uninit, this]);
-  },
-  
-  uninit: function() {
-    unregisterObservers();
   },
 
   /**
@@ -240,8 +278,7 @@ let PrefsPrivate = {
 function registerObservers() {
   // Observe preferences changes
   try {
-    branch.QueryInterface(Ci.nsIPrefBranch2)
-          .addObserver("", PrefsPrivate, true);
+    branch.addObserver("", PrefsPrivate, true);
   } catch (e) {
     Cu.reportError(e);
   }
@@ -249,8 +286,7 @@ function registerObservers() {
 
 function unregisterObservers() {
   try {
-    branch.QueryInterface(Ci.nsIPrefBranch2)
-          .removeObserver("", PrefsPrivate);
+    branch.removeObserver("", PrefsPrivate);
   } catch (e) {
     Cu.reportError(e);
   }
@@ -280,12 +316,12 @@ function triggerListeners(/**String*/ name) {
   customListeners.slice().forEach(function(customListener) {
     let newValue = customListener.evaluator();
     if (newValue !== customListener.value) {
+      customListener.value = newValue;
       try {
         customListener.handler(newValue);
       } catch (ex) {
         Utils.ERROR("Failed to call custom pref change listeners for Prefs." + name + ": " + ex);
       }
-      customListener.value = newValue;
     }
   });
 }

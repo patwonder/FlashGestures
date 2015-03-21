@@ -5,7 +5,7 @@
 
   <em:id>flashgestures@patwonder</em:id>
   <em:name>Flash Gestures</em:name>
-  <em:version>1.0b</em:version>
+  <em:version>1.1</em:version>
   <em:description>Use your favorite mouse gesture add-on on Flash Players.</em:description>
   <em:creator>Yifan Wu</em:creator>
   <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
@@ -21,8 +21,8 @@
   <em:targetApplication>
     <Description>
       <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-      <em:minVersion>17.0</em:minVersion>
-      <em:maxVersion>37.0a1</em:maxVersion>
+      <em:minVersion>24.0</em:minVersion>
+      <em:maxVersion>38.0a1</em:maxVersion>
     </Description>
   </em:targetApplication>
 
@@ -31,6 +31,7 @@
       <em:locale>en</em:locale>
       <em:name>Flash Gestures</em:name>
       <em:creator>Yifan Wu</em:creator>
+      <em:translator>shyangs (zh-TW)</em:translator>
       <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
       <em:description>Use your favorite mouse gesture add-on and Firefox hotkeys on plugins like Flash Player.</em:description>
     </Description>
@@ -41,8 +42,20 @@
       <em:locale>zh-CN</em:locale>
       <em:name>Flash Gestures</em:name>
       <em:creator>Yifan Wu</em:creator>
+      <em:translator>shyangs (zh-TW)</em:translator>
       <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
       <em:description>在 Flash 播放器等插件上使用您喜爱的鼠标手势扩展和 Firefox 快捷键。</em:description>
+    </Description>
+  </em:localized>
+
+  <em:localized>
+    <Description>
+      <em:locale>zh-TW</em:locale>
+      <em:name>Flash Gestures</em:name>
+      <em:creator>Yifan Wu</em:creator>
+      <em:translator>shyangs (zh-TW)</em:translator>
+      <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
+      <em:description>在 Flash Player 等嵌入網頁的外掛程式上使用您喜愛的滑鼠手勢擴充套件和 Firefox 熱鍵。</em:description>
     </Description>
   </em:localized>
 

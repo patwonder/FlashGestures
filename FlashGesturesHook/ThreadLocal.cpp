@@ -65,10 +65,16 @@ ThreadLocalStorage& ThreadLocalStorage::GetInstance() {
 }
 
 void ThreadLocalStorage::FreeAllInstances() {
-	SimpleLock lock(g_mtxAllocatedTLS);
-	ATLTRACE(_T("Freeing %d remaining TLS instance(s)...\n"), g_setAllocatedTLS.size());
-	for (ThreadLocalStorage* pTLS : g_setAllocatedTLS) {
-		delete pTLS;
+	vector<ThreadLocalStorage*> vInstancesToClear;
+	{
+		SimpleLock lock(g_mtxAllocatedTLS);
+		ATLTRACE(_T("Freeing %d remaining TLS instance(s)...\n"), g_setAllocatedTLS.size());
+		for (ThreadLocalStorage* pTLS : g_setAllocatedTLS) {
+			vInstancesToClear.push_back(pTLS);
+		}
 	}
-	g_setAllocatedTLS.clear();
+	for (ThreadLocalStorage* pTLS : vInstancesToClear)
+		delete pTLS;
+
+	ATLASSERT(g_setAllocatedTLS.size() == 0);
 }
