@@ -194,11 +194,8 @@ WindowWrapper.prototype = {
     this.updateInterface();
     
     if (Hook.initialized) {
-      this.window.addEventListener("focus", onFocus, true);
-      this.window.addEventListener("mousedown", this._onMouseDown = onMouseDown.bind(this), true);
-      this.window.addEventListener("mouseup", this._onMouseUp = onMouseUp.bind(this), true);
-      this.window.addEventListener("mousemove", this._onMouseMove = onMouseMove.bind(this), true);
-      this.window.addEventListener("PluginInstantiated", this._onPluginEvent = onPluginEvent.bind(this), true);
+      this._registerEventListeners();
+      this._registerMessageListeners();
       this._listenersAdded = true;
       
       if (Prefs.enabled) {
@@ -219,12 +216,46 @@ WindowWrapper.prototype = {
       Utils.ERROR("Failed to remove toolbar button: " + ex);
     }
     if (this._listenersAdded) {
-      this.window.removeEventListener("PluginInstantiated", this._onPluginEvent, true);
-      this.window.removeEventListener("mousemove", this._onMouseMove, true);
-      this.window.removeEventListener("mouseup", this._onMouseUp, true);
-      this.window.removeEventListener("mousedown", this._onMouseDown, true);
-      this.window.removeEventListener("focus", onFocus, true);
       this._listenersAdded = false;
+      this._unregisterMessageListeners();
+      this._unregisterEventListeners();
+    }
+  },
+  
+  _registerEventListeners: function() {
+    this.window.addEventListener("focus", onFocus, true);
+    this.window.addEventListener("mousedown", this._onMouseDown = onMouseDown.bind(this), true);
+    this.window.addEventListener("mouseup", this._onMouseUp = onMouseUp.bind(this), true);
+    this.window.addEventListener("mousemove", this._onMouseMove = onMouseMove.bind(this), true);
+    this.window.addEventListener("PluginInstantiated", this._onPluginEvent = onPluginEvent.bind(this), true);
+  },
+  
+  _unregisterEventListeners: function() {
+    this.window.removeEventListener("PluginInstantiated", this._onPluginEvent, true);
+    this.window.removeEventListener("mousemove", this._onMouseMove, true);
+    this.window.removeEventListener("mouseup", this._onMouseUp, true);
+    this.window.removeEventListener("mousedown", this._onMouseDown, true);
+    this.window.removeEventListener("focus", onFocus, true);
+  },
+  
+  _registerMessageListeners: function() {
+    if (!this.window.gMultiProcessBrowser) return;
+    
+    let mm = this.window.messageManager;
+    if (mm) {
+      mm.addMessageListener("flashgestures:PluginInstantiated", this);
+      mm.loadFrameScript("chrome://flashgestures/content/frame.js", true);
+    }
+  },
+  
+  _unregisterMessageListeners: function() {
+    if (!this.window.gMultiProcessBrowser) return;
+    
+    let mm = this.window.messageManager;
+    if (mm) {
+      mm.broadcastAsyncMessage("flashgestures:Uninit");
+      mm.removeDelayedFrameScript("chrome://flashgestures/content/frame.js");
+      mm.removeMessageListener("flashgestures:PluginInstantiated", this);
     }
   },
   
@@ -299,6 +330,27 @@ WindowWrapper.prototype = {
       }
     }
   },
+
+  onPluginInstantiated: function() {
+    // Do async hook installing. The relavant plugin processes should be ready
+    // in no more than 10 seconds
+    let MaxLoadingTimeMillis = 10000;
+    let HookTimeoutStep = 2000;
+    clearPendingTimers();
+    for (let timeout = 0; timeout <= MaxLoadingTimeMillis; timeout += HookTimeoutStep) {
+      timers.push(Utils.runAsyncTimeout(function(timeout, timer) {
+        Utils.removeOneItem(timers, timer);
+        if (Prefs.enabled) {
+          Utils.LOG("Doing async hooking, timeout = " + timeout);
+          Hook.install();
+        }
+      }, null, timeout, timeout));
+    }
+    
+    // Should also fix focus (due to click-to-play)
+    if (Prefs.enabled)
+      this.checkAndFixFocus();
+  },
   
   checkAndFixFocus: function() {
     let cd = this.window.document.commandDispatcher;
@@ -311,6 +363,26 @@ WindowWrapper.prototype = {
         Hook.blurAndFocus(focused);
       }
     }
+  },
+
+  /**
+   * nsIMessageListener
+   */
+  receiveMessage: function(msg)
+  {
+    let result = undefined;
+    
+    let browser = msg.target;
+    switch (msg.name) {
+    case "flashgestures:PluginInstantiated":
+      this.onPluginInstantiated();
+      break;
+    default:
+      Utils.LOG("Unhandled message: " + msg.name);
+      break;
+    }
+    
+    return result;
   },
 };
 
@@ -408,24 +480,7 @@ function onPluginEvent(event) {
   if (!(plugin instanceof Ci.nsIObjectLoadingContent))
     return;
 
-  // Do async hook installing. The relavant plugin processes should be ready
-  // in no more than 10 seconds
-  let MaxLoadingTimeMillis = 10000;
-  let HookTimeoutStep = 2000;
-  clearPendingTimers();
-  for (let timeout = 0; timeout <= MaxLoadingTimeMillis; timeout += HookTimeoutStep) {
-    timers.push(Utils.runAsyncTimeout(function(timeout, timer) {
-      Utils.removeOneItem(timers, timer);
-      if (Prefs.enabled) {
-        Utils.LOG("Doing async hooking, timeout = " + timeout);
-        Hook.install();
-      }
-    }, null, timeout, timeout));
-  }
-  
-  // Should also fix focus (due to click-to-play)
-  if (Prefs.enabled)
-    this.checkAndFixFocus();
+  this.onPluginInstantiated();
 }
 
 function onFocus(event) {
