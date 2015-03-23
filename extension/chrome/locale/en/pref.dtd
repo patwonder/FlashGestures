@@ -1,4 +1,6 @@
 <!ENTITY pref.enabled.title "Enable Flash Gestures">
 <!ENTITY pref.enabled.desc "Enable Flash Gestures' features, allowing you to use mouse gestures and firefox hotkeys on plugins like Flash Player.">
 <!ENTITY pref.forceWindowed.title "Force plugins to use windowed mode">
-<!ENTITY pref.forceWindowed.desc "If you can't type text in Flash Players or Silverlight plugins, try enable this option (may cause rendering glitches).">
+<!ENTITY pref.forceWindowed.desc "If you can't type text in Flash Players or Silverlight plugins, try enable this option (may cause rendering glitches). You may have to reload the page for the change to take effect.">
+<!ENTITY pref.forceWindowedWhitelist.title "Do not force plugins on these sites to use windowed mode">
+<!ENTITY pref.forceWindowedWhitelist.desc "A space-separated list of domain names that the option &quot;Force plugins to use windowed mode&quot; will not apply to.">

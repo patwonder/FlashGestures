@@ -1,4 +1,6 @@
 <!ENTITY pref.enabled.title "启用 Flash Gestures">
 <!ENTITY pref.enabled.desc "启用 Flash Gestures 的功能，使您能够在 Flash 播放器等插件上使用鼠标手势和 Firefox 快捷键。">
 <!ENTITY pref.forceWindowed.title "强制插件使用窗口模式">
-<!ENTITY pref.forceWindowed.desc "如果您无法在 Flash 播放器或者 Silverlight 插件中输入文字，请尝试打开这个选项（可能会导致渲染瑕疵）。">
+<!ENTITY pref.forceWindowed.desc "如果您无法在 Flash 播放器或者 Silverlight 插件中输入文字，请尝试打开这个选项（可能会导致渲染瑕疵）。您可能需要重新载入页面以使更改生效。">
+<!ENTITY pref.forceWindowedWhitelist.title "不要强制以下站点的插件使用窗口模式">
+<!ENTITY pref.forceWindowedWhitelist.desc "一个由空格分隔的域名列表，在该列表中的站点将不会受“强制插件使用窗口模式”选项的影响。">

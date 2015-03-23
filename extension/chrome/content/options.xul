@@ -7,4 +7,6 @@
            title="&pref.enabled.title;" desc="&pref.enabled.desc;" />
   <setting type="bool" pref="extensions.flashgestures.forceWindowed"
            title="&pref.forceWindowed.title;" desc="&pref.forceWindowed.desc;" />
+  <setting type="string" pref="extensions.flashgestures.forceWindowedWhitelist"
+           title="&pref.forceWindowedWhitelist.title;" desc="&pref.forceWindowedWhitelist.desc;" />
 </vbox>

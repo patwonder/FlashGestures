@@ -50,7 +50,7 @@ let ForceWindowed = {
   initWhitelist: function(whitelist) {
     hostWhitelist = Object.create(null);
     
-    let hosts = whitelist.split(" ");
+    let hosts = whitelist.split(/\s+/);
     hosts.forEach(function(host) {
       if (!Utils.isValidHostname(host))
         return;
