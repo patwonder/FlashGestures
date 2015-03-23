@@ -76,6 +76,89 @@ let Utils = {
   },
   
   /**
+   * Translates a string URI into its nsIURI representation, will return null for
+   * invalid URIs.
+   */
+  makeURI: function( /**String*/ url, /**Boolean*/ silent) /**nsIURI*/
+  {
+    try
+    {
+      url = url.trim();
+      if (!/^[\w\-]+:/.test(url))
+      {
+        url = "http://" + url;
+      }
+      return Services.io.newURI(url, null, null);
+    }
+    catch (e)
+    {
+      if (!silent)
+        Utils.ERROR(e + ": " + url);
+      return null;
+    }
+  },
+
+  /**
+   * If a protocol using nested URIs like jar: is used - retrieves innermost
+   * nested URI.
+   */
+  unwrapURL: function( /**nsIURI or String*/ url) /**nsIURI*/
+  {
+    if (!(url instanceof Ci.nsIURI)) url = Utils.makeURI(url);
+
+    if (url instanceof Ci.nsINestedURI) return url.innermostURI;
+    else return url;
+  },
+
+  /**
+   * Whether the hostname is valid
+   */
+  isValidHostname: function(hostname)
+  {
+    let uri = Utils.makeURI(hostname, true);
+    return uri && uri.host === hostname;
+  },
+  
+  /**
+   * Extracts the hostname from a URL (might return null).
+   */
+  getHostname: function( /**String*/ url) /**String*/
+  {
+    try
+    {
+      url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
+      if (!/^[\w\-]+:/.test(url))
+      {
+        url = "http://" + url;
+      }
+      return Utils.unwrapURL(url).host;
+    }
+    catch (e)
+    {
+      return null;
+    }
+  },
+  getEffectiveHost: function( /**String*/ url) /**String*/
+  {
+    // Cache the eTLDService if this is our first time through
+    var _eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);
+    var _IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
+    this.getEffectiveHost = function(u)
+    {
+      let hostname = this.getHostname(u);
+      try {
+        let baseDomain = _eTLDService.getBaseDomainFromHost(hostname);
+        return _IDNService.convertToDisplayIDN(baseDomain, {});
+      } catch (e) {
+        // If something goes wrong (e.g. hostname is an IP address) just fail back
+        // to the full domain.
+        return hostname;
+      }
+    };
+    return this.getEffectiveHost(url);
+  },
+
+  /**
    * Attempts to find a browser window for opening a URL
    */
   findAnyBrowserWindow: function() {

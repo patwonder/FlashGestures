@@ -27,6 +27,7 @@ let moduleList = [
   moduleURIPrefix + "Utils.jsm",
   moduleURIPrefix + "Localization.jsm",
   moduleURIPrefix + "Prefs.jsm",
+  moduleURIPrefix + "ForceWindowed.jsm",
   moduleURIPrefix + "Hook.jsm",
   moduleURIPrefix + "PersistUI.jsm",
   moduleURIPrefix + "AppIntegration.jsm",

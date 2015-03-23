@@ -5,42 +5,9 @@
     <implementation>
       <constructor>
       <![CDATA[
-        let plugin = this;
-        let wmode = plugin.getAttribute("wmode") || (function() {
-          let params = plugin.querySelectorAll("param[name]");
-          for (let i = 0, l = params.length; i < l; i++) {
-            let param = params[i];
-            if (param.getAttribute("name").toLowerCase() === "wmode")
-              return param.getAttribute("value");
-          }
-          return "";
-        })();
-        //console.log("[FlashGestures] Flash player detected, wmode = " + (wmode || "(default)"));
-        
-        wmode = wmode.toLowerCase();
-        if (wmode === "opaque" || wmode === "transparent") {
-          let preferredWmode = "direct";
-          if (plugin.hasAttribute("wmode")) {
-            plugin.setAttribute("wmode", preferredWmode);
-          } else {
-            let params = plugin.querySelectorAll("param[name]");
-            for (let i = 0, l = params.length; i < l; i++) {
-              let param = params[i];
-              if (param.getAttribute("name").toLowerCase() === "wmode") {
-                param.setAttribute("value", preferredWmode);
-                break;
-              }
-            }
-          }
-          //console.log("[FlashGestures] Forced into wmode = " + preferredWmode);
-        }
-        
-        // Self-"unbind"ing
-        // This does not actually remove the binding, however. But it does allow other bindings 
-        // to be attached to plugin elements. See
-        // https://ask.mozilla.org/question/297/apply-and-remove-xbl-binding-on-runtime/
-        // for details.
-        plugin.classList.add("flashgestures-forced-window");
+        let evt = document.createEvent("CustomEvent");
+        evt.initCustomEvent("flashgestures:ForceWindowedFlashPlayer", true, true, "");
+        this.dispatchEvent(evt);
       ]]>
       </constructor>
     </implementation>
@@ -49,26 +16,9 @@
     <implementation>
       <constructor>
       <![CDATA[
-        let plugin = this;
-        let windowless = plugin.getAttribute("windowless") || (function() {
-          let param = plugin.querySelector("param[name=\"windowless\"]");
-          return param ? param.getAttribute("value") : "";
-        })();
-        
-        windowless = windowless.toLowerCase();
-        if (windowless === "true") {
-          let preferredWindowless = "false";
-          if (plugin.hasAttribute("windowless")) {
-            plugin.setAttribute("windowless", preferredWindowless);
-          } else {
-            let param = plugin.querySelector("param[name=\"windowless\"]");
-            if (param)
-              param.setAttribute("value", preferredWindowless);
-          }
-        }
-        
-        // Self-unbinding
-        plugin.classList.add("flashgestures-forced-window");
+        let evt = document.createEvent("CustomEvent");
+        evt.initCustomEvent("flashgestures:ForceWindowedSilverlight", true, true, "");
+        this.dispatchEvent(evt);
       ]]>
       </constructor>
     </implementation>

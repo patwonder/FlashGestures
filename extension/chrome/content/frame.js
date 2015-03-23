@@ -111,18 +111,25 @@ let ContentUtils = {
   });
 });
 
+function MsgRet(retArray, defaultValue) {
+  if (retArray.length < 1)
+    return defaultValue;
+  return retArray[0];
+}
+
 let prefs = Services.prefs.getBranch("extensions.flashgestures.");
 
-addEventListener("PluginInstantiated", function(e) {
-  let plugin = e.target;
+function onPluginInstantiated(event) {
+  let plugin = event.target;
   
   // We're expecting the target to be a plugin.
   if (!(plugin instanceof Ci.nsIObjectLoadingContent))
     return;
   
-  this.sendSyncMessage("flashgestures:PluginInstantiated");
-}, true);
+  sendSyncMessage("flashgestures:PluginInstantiated");
+}
 
+addEventListener("PluginInstantiated", onPluginInstantiated, true);
 
 let onMouseDownSimulating = false;
 
@@ -231,6 +238,97 @@ function onMouseDown(event) {
 
 addEventListener("mousedown", onMouseDown, true);
 
+let ForceWindowedProxy = {
+  enabledOnURL: function(url) {
+    return MsgRet(sendSyncMessage("flashgestures:IsForceWindowedEnabledOnURL", url), true);
+  }
+};
+
+function onForceWindowedFlashPlayer(event) {
+  let plugin = event.target;
+  if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+    return;
+  
+  let mimeType = plugin.getAttribute("type");
+  if (mimeType !== "application/x-shockwave-flash" && mimeType !== "application/futuresplash")
+    return;
+  
+  if (plugin.classList.contains("flashgestures-processed"))
+    return;
+  plugin.classList.add("flashgestures-processed");
+  
+  if (!ForceWindowedProxy.enabledOnURL(plugin.ownerDocument.location.href))
+    return;
+  
+  let wmode = plugin.getAttribute("wmode") || (function() {
+    let params = plugin.querySelectorAll("param[name]");
+    for (let i = 0, l = params.length; i < l; i++) {
+      let param = params[i];
+      if (param.getAttribute("name").toLowerCase() === "wmode")
+        return param.getAttribute("value");
+    }
+    return "";
+  })();
+  ContentUtils.LOG("Flash player detected, wmode = " + (wmode || "(default)"));
+  
+  wmode = wmode.toLowerCase();
+  if (wmode === "opaque" || wmode === "transparent") {
+    let preferredWmode = "direct";
+    if (plugin.hasAttribute("wmode")) {
+      plugin.setAttribute("wmode", preferredWmode);
+    } else {
+      let params = plugin.querySelectorAll("param[name]");
+      for (let i = 0, l = params.length; i < l; i++) {
+        let param = params[i];
+        if (param.getAttribute("name").toLowerCase() === "wmode") {
+          param.setAttribute("value", preferredWmode);
+          break;
+        }
+      }
+    }
+    ContentUtils.LOG("Forced into wmode = " + preferredWmode);
+  }
+}
+
+function onForceWindowedSilverlight(event) {
+  let plugin = event.target;
+  if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+    return;
+  
+  let mimeType = plugin.getAttribute("type");
+  if (mimeType !== "application/x-silverlight" && mimeType !== "application/x-silverlight-2")
+    return;
+  
+  if (plugin.classList.contains("flashgestures-processed"))
+    return;
+  plugin.classList.add("flashgestures-processed");
+
+  if (!ForceWindowedProxy.enabledOnURL(plugin.ownerDocument.location.href))
+    return;
+  
+  let windowless = plugin.getAttribute("windowless") || (function() {
+    let param = plugin.querySelector("param[name=\"windowless\"]");
+    return param ? param.getAttribute("value") : "";
+  })();
+  ContentUtils.LOG("Silverlight detected, windowless = " + (windowless || "false"));
+
+  windowless = windowless.toLowerCase();
+  if (windowless === "true") {
+    let preferredWindowless = "false";
+    if (plugin.hasAttribute("windowless")) {
+      plugin.setAttribute("windowless", preferredWindowless);
+    } else {
+      let param = plugin.querySelector("param[name=\"windowless\"]");
+      if (param)
+        param.setAttribute("value", preferredWindowless);
+    }
+    ContentUtils.LOG("Forced into windowless = " + preferredWindowless);
+  }
+};
+
+addEventListener("flashgestures:ForceWindowedFlashPlayer", onForceWindowedFlashPlayer, true, true);
+addEventListener("flashgestures:ForceWindowedSilverlight", onForceWindowedSilverlight, true, true);
+
 let messageListener = {
   receiveMessage: function(msg) {
     switch (msg.name) {
@@ -238,6 +336,9 @@ let messageListener = {
       ContentUtils.LOG("doing cleanup...");
       removeMessageListener("flashgestures:Uninit", this);
       removeEventListener("mousedown", onMouseDown, true);
+      removeEventListener("flashgestures:ForceWindowedSilverlight", onForceWindowedSilverlight, true);
+      removeEventListener("flashgestures:ForceWindowedFlashPlayer", onForceWindowedFlashPlayer, true);
+      removeEventListener("PluginInstantiated", onPluginInstantiated, true);
       break;
     default:
       ContentUtils.LOG("Unhandled message: " + msg.name);

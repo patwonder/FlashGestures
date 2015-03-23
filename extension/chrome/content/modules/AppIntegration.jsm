@@ -32,6 +32,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import(moduleURIPrefix + "Utils.jsm");
 Cu.import(moduleURIPrefix + "Hook.jsm");
 Cu.import(moduleURIPrefix + "Prefs.jsm");
+Cu.import(moduleURIPrefix + "ForceWindowed.jsm");
 Cu.import(moduleURIPrefix + "PersistUI.jsm");
 Cu.import(moduleURIPrefix + "Localization.jsm");
 
@@ -228,9 +229,17 @@ WindowWrapper.prototype = {
     this.window.addEventListener("mouseup", this._onMouseUp = onMouseUp.bind(this), true);
     this.window.addEventListener("mousemove", this._onMouseMove = onMouseMove.bind(this), true);
     this.window.addEventListener("PluginInstantiated", this._onPluginEvent = onPluginEvent.bind(this), true);
+    this.window.addEventListener("flashgestures:ForceWindowedFlashPlayer",
+      this._onForceWindowedFlashPlayer = onForceWindowedFlashPlayer.bind(this), true, true);
+    this.window.addEventListener("flashgestures:ForceWindowedSilverlight",
+      this._onForceWindowedSilverlight = onForceWindowedSilverlight.bind(this), true, true);
   },
   
   _unregisterEventListeners: function() {
+    this.window.removeEventListener("flashgestures:ForceWindowedSilverlight",
+      this._onForceWindowedSilverlight, true);
+    this.window.removeEventListener("flashgestures:ForceWindowedFlashPlayer",
+      this._onForceWindowedFlashPlayer, true);
     this.window.removeEventListener("PluginInstantiated", this._onPluginEvent, true);
     this.window.removeEventListener("mousemove", this._onMouseMove, true);
     this.window.removeEventListener("mouseup", this._onMouseUp, true);
@@ -244,6 +253,7 @@ WindowWrapper.prototype = {
     let mm = this.window.messageManager;
     if (mm) {
       mm.addMessageListener("flashgestures:PluginInstantiated", this);
+      mm.addMessageListener("flashgestures:IsForceWindowedEnabledOnURL", this);
       mm.loadFrameScript("chrome://flashgestures/content/frame.js", true);
     }
   },
@@ -255,6 +265,7 @@ WindowWrapper.prototype = {
     if (mm) {
       mm.broadcastAsyncMessage("flashgestures:Uninit");
       mm.removeDelayedFrameScript("chrome://flashgestures/content/frame.js");
+      mm.removeMessageListener("flashgestures:IsForceWindowedEnabledOnURL", this);
       mm.removeMessageListener("flashgestures:PluginInstantiated", this);
     }
   },
@@ -376,6 +387,10 @@ WindowWrapper.prototype = {
     switch (msg.name) {
     case "flashgestures:PluginInstantiated":
       this.onPluginInstantiated();
+      break;
+    case "flashgestures:IsForceWindowedEnabledOnURL":
+      result = ForceWindowed.enabledOnURL(msg.data);
+      Utils.LOG("IsForceWindowedEnabledOnURL: " + result + " for " + msg.data);
       break;
     default:
       Utils.LOG("Unhandled message: " + msg.name);
@@ -611,4 +626,86 @@ function onMouseMove(event) {
       Utils.ERROR(ex);
     }
   });
+}
+
+function onForceWindowedFlashPlayer(event) {
+  let plugin = event.target;
+  if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+    return;
+  
+  let mimeType = plugin.getAttribute("type");
+  if (mimeType !== "application/x-shockwave-flash" && mimeType !== "application/futuresplash")
+    return;
+  
+  if (plugin.classList.contains("flashgestures-processed"))
+    return;
+  plugin.classList.add("flashgestures-processed");
+  
+  if (!ForceWindowed.enabledOnURL(plugin.ownerDocument.location.href))
+    return;
+  
+  let wmode = plugin.getAttribute("wmode") || (function() {
+    let params = plugin.querySelectorAll("param[name]");
+    for (let i = 0, l = params.length; i < l; i++) {
+      let param = params[i];
+      if (param.getAttribute("name").toLowerCase() === "wmode")
+        return param.getAttribute("value");
+    }
+    return "";
+  })();
+  Utils.LOG("Flash player detected, wmode = " + (wmode || "(default)"));
+  
+  wmode = wmode.toLowerCase();
+  if (wmode === "opaque" || wmode === "transparent") {
+    let preferredWmode = "direct";
+    if (plugin.hasAttribute("wmode")) {
+      plugin.setAttribute("wmode", preferredWmode);
+    } else {
+      let params = plugin.querySelectorAll("param[name]");
+      for (let i = 0, l = params.length; i < l; i++) {
+        let param = params[i];
+        if (param.getAttribute("name").toLowerCase() === "wmode") {
+          param.setAttribute("value", preferredWmode);
+          break;
+        }
+      }
+    }
+    Utils.LOG("Forced into wmode = " + preferredWmode);
+  }
+}
+
+function onForceWindowedSilverlight(event) {
+  let plugin = event.target;
+  if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+    return;
+  
+  let mimeType = plugin.getAttribute("type");
+  if (mimeType !== "application/x-silverlight" && mimeType !== "application/x-silverlight-2")
+    return;
+  
+  if (plugin.classList.contains("flashgestures-processed"))
+    return;
+  plugin.classList.add("flashgestures-processed");
+
+  if (!ForceWindowed.enabledOnURL(plugin.ownerDocument.location.href))
+    return;
+  
+  let windowless = plugin.getAttribute("windowless") || (function() {
+    let param = plugin.querySelector("param[name=\"windowless\"]");
+    return param ? param.getAttribute("value") : "";
+  })();
+  Utils.LOG("Silverlight detected, windowless = " + (windowless || "false"));
+
+  windowless = windowless.toLowerCase();
+  if (windowless === "true") {
+    let preferredWindowless = "false";
+    if (plugin.hasAttribute("windowless")) {
+      plugin.setAttribute("windowless", preferredWindowless);
+    } else {
+      let param = plugin.querySelector("param[name=\"windowless\"]");
+      if (param)
+        param.setAttribute("value", preferredWindowless);
+    }
+    Utils.LOG("Forced into windowless = " + preferredWindowless);
+  }
 }
