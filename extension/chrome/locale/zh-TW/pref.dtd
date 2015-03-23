@@ -1,4 +1,6 @@
 <!ENTITY pref.enabled.title "啟用 Flash Gestures">
 <!ENTITY pref.enabled.desc "啟用 Flash Gestures 的功能，使您能夠在 Flash Player 等嵌入網頁的外掛程式上使用滑鼠手勢和 Firefox 熱鍵。">
 <!ENTITY pref.forceWindowed.title "強制外掛程式使用視窗模式">
-<!ENTITY pref.forceWindowed.desc "如果您無法在 Flash Player 或者 Silverlight 外掛程式中輸入文字，請嘗試啟用這個選項（可能會導致渲染瑕疵）。">
+<!ENTITY pref.forceWindowed.desc "如果您無法在 Flash Player 或者 Silverlight 外掛程式中輸入文字，請嘗試啟用這個選項（可能會導致渲染瑕疵）。您可能需要重新載入網頁以使變更生效。">
+<!ENTITY pref.forceWindowedWhitelist.title "不要強制下列網站的外掛程式使用視窗模式">
+<!ENTITY pref.forceWindowedWhitelist.desc "一個由空格分隔的域名列表，在該列表中的網站將不會受「強制外掛程式使用視窗模式」選項的影響。">
