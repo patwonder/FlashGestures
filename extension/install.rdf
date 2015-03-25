@@ -5,7 +5,7 @@
 
   <em:id>flashgestures@patwonder</em:id>
   <em:name>Flash Gestures</em:name>
-  <em:version>1.1</em:version>
+  <em:version>1.2b</em:version>
   <em:description>Use your favorite mouse gesture add-on on Flash Players.</em:description>
   <em:creator>Yifan Wu</em:creator>
   <em:homepageURL>https://github.com/patwonder/FlashGestures</em:homepageURL>
@@ -22,7 +22,7 @@
     <Description>
       <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
       <em:minVersion>24.0</em:minVersion>
-      <em:maxVersion>38.0a1</em:maxVersion>
+      <em:maxVersion>39.0a1</em:maxVersion>
     </Description>
   </em:targetApplication>
 
