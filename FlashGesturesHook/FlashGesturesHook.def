@@ -5,3 +5,4 @@ EXPORTS
 	FGH_Uninitialize   @4
 	FGH_RecordFocusedWindow   @5
 	FGH_RestoreFocusedWindow   @6
+	FGH_IsTopLevelWindowFocused   @7

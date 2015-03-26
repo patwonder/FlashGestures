@@ -19,9 +19,10 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 
 #define ADDON_ABI __stdcall
 
-bool ADDON_ABI FGH_Initialize();
-bool ADDON_ABI FGH_InstallHook();
+DWORD ADDON_ABI FGH_Initialize();
+DWORD ADDON_ABI FGH_InstallHook();
 void ADDON_ABI FGH_UninstallHook();
 void ADDON_ABI FGH_Uninitialize();
 void ADDON_ABI FGH_RecordFocusedWindow();
 void ADDON_ABI FGH_RestoreFocusedWindow();
+DWORD ADDON_ABI FGH_IsTopLevelWindowFocused();

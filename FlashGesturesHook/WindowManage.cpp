@@ -21,13 +21,19 @@ along with Flash Gestures.  If not, see <http://www.gnu.org/licenses/>.
 
 HWND g_hwndFocused = NULL;
 
-void RecordFocusedWindow() {
+HWND GetFocusedWindow() {
 	GUITHREADINFO info;
+	ZeroMemory(&info, sizeof(info));
 	info.cbSize = sizeof(info);
 	if (GetGUIThreadInfo(0, &info))
-		g_hwndFocused = info.hwndFocus;
-	else
-		ATLTRACE(_T("ERROR: GetGUIThreadInfo failed with last error = %d\n"), GetLastError());
+		return info.hwndFocus;
+
+	ATLTRACE(_T("ERROR: GetGUIThreadInfo failed with last error = %d\n"), GetLastError());
+	return NULL;
+}
+
+void RecordFocusedWindow() {
+	g_hwndFocused = GetFocusedWindow();
 }
 
 void RestoreFocusedWindow() {
@@ -35,4 +41,9 @@ void RestoreFocusedWindow() {
 		SetFocus(g_hwndFocused);
 		g_hwndFocused = NULL;
 	}
+}
+
+bool IsTopLevelWindowFocused() {
+	HWND hwndFocused = GetFocusedWindow();
+	return GetAncestor(hwndFocused, GA_ROOT) == hwndFocused;
 }

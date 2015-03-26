@@ -23,4 +23,5 @@ void UninstallHook();
 void Uninitialize();
 void RecordFocusedWindow();
 void RestoreFocusedWindow();
+bool IsTopLevelWindowFocused();
 LRESULT CALLBACK GetMsgHook(int nCode, WPARAM wParam, LPARAM lParam);

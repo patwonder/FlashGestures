@@ -536,7 +536,7 @@ function onMouseDown(event) {
   if (target instanceof Ci.nsIObjectLoadingContent) {
     let upperLayerEvent = copyMouseEvent(this.window, event);
     
-    if (event.buttons & 0x2) {
+    if (event.button === 2) {
       // For right clicks, we create a shadow event that is dispatched 
       // to the original target if the following conditions are met:
       // 1) a corresponding mouseup event is fired within 300ms

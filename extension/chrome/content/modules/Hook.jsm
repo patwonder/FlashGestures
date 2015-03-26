@@ -32,19 +32,15 @@ Cu.import("resource://gre/modules/ctypes.jsm");
 
 var DWORD = ctypes.uint32_t;
 var VOID = ctypes.void_t;
-var LRESULT = ctypes.intptr_t;
-var INT = ctypes.int32_t;
-var WPARAM = ctypes.uintptr_t;
-var LPARAM = ctypes.uintptr_t;
 
 let hHookDll = null;
 let Initialize = null;
 let InstallHook = null;
 let UninstallHook = null;
-let GetMsgHook = null;
 let Uninitialize = null;
 let RecordFocusedWindow = null;
 let RestoreFocusedWindow = null;
+let IsTopLevelWindowFocused = null;
 
 let initialized = false;
 
@@ -68,6 +64,7 @@ let Hook = {
       Uninitialize = hHookDll.declare("FGH_Uninitialize", ctypes.winapi_abi, VOID);
       RecordFocusedWindow = hHookDll.declare("FGH_RecordFocusedWindow", ctypes.winapi_abi, VOID);
       RestoreFocusedWindow = hHookDll.declare("FGH_RestoreFocusedWindow", ctypes.winapi_abi, VOID);
+      IsTopLevelWindowFocused = hHookDll.declare("FGH_IsTopLevelWindowFocused", ctypes.winapi_abi, DWORD);
     } catch (ex) {
       Utils.ERROR("Failed to locate function entry points in the hook dll: " + ex);
       hHookDll.close();
@@ -116,8 +113,17 @@ let Hook = {
     if (!initialized)
       return;
     
-    RecordFocusedWindow();
-    embedObject.blur();
-    RestoreFocusedWindow();
+    let isWindowedPlugin = !IsTopLevelWindowFocused();
+    
+    if (isWindowedPlugin) {
+      RecordFocusedWindow();
+      embedObject.blur();
+      RestoreFocusedWindow();
+    } else {
+      // delay the blur a little to allow clicks to be processed while the plugin has focus
+      Utils.runAsync(function() {
+        embedObject.blur();
+      }, this);
+    }
   },
 };
