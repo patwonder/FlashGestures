@@ -65,7 +65,7 @@ MessageHandleResult TraceHandler::handleMessageInternal(MSG* pMsg) {
 		if (pMsg->message == WM_RBUTTONDOWN) {
 			m_ptStart = ptCurrent;
 			setState(GS_Initiated);
-			ATLTRACE(_T("Down\n"));
+			ATLTRACE(_T("Trace Gesture Initiated\n"));
 			return MHR_Initiated;
 		}
 		break;
@@ -74,12 +74,15 @@ MessageHandleResult TraceHandler::handleMessageInternal(MSG* pMsg) {
 		if (pMsg->message == WM_MOUSEMOVE && (pMsg->wParam & MK_RBUTTON)) {
 			if (abs(dist.cx) > 10 || abs(dist.cy) > 10) {
 				setState(GS_Triggered);
-				ATLTRACE(_T("Trigger\n"));
+				ATLTRACE(_T("Trace Gesture Triggered\n"));
 				return MHR_Triggered;
 			} else
 				return MHR_Swallowed;
+		} else if (pMsg->message == WM_RBUTTONDOWN || pMsg->message == WM_RBUTTONDBLCLK) {
+			ATLTRACE(_T("Duplicate Trace Gesture Initiation\n"));
+			return MHR_Discarded;
 		} else {
-			ATLTRACE(_T("Up\n"));
+			ATLTRACE(_T("Trace Gesture Canceled due to message no. %x\n"), pMsg->message);
 			setState(GS_None);
 			return MHR_Canceled;
 		}
@@ -88,7 +91,7 @@ MessageHandleResult TraceHandler::handleMessageInternal(MSG* pMsg) {
 		if (pMsg->message == WM_MOUSEMOVE && (pMsg->wParam & MK_RBUTTON)) {
 			return MHR_Swallowed;
 		} else {
-			ATLTRACE(_T("Up\n"));
+			ATLTRACE(_T("Trace Gesture Ended\n"));
 			setState(GS_None);
 			return MHR_GestureEnd;
 		}
@@ -111,7 +114,7 @@ MessageHandleResult RockerHandler::handleMessageInternal(MSG* pMsg) {
 			m_ptStart = ptCurrent;
 			m_bLeft = (pMsg->message == WM_LBUTTONDOWN);
 			setState(GS_Initiated);
-			ATLTRACE(CString(_T("Rocker Down: ")) + (m_bLeft ? _T(" left\n") : _T(" right\n")));
+			ATLTRACE(CString(_T("Rocker Gesture Initiated: ")) + (m_bLeft ? _T(" Left\n") : _T(" Right\n")));
 			return MHR_Initiated;
 		}
 		break;
@@ -120,17 +123,21 @@ MessageHandleResult RockerHandler::handleMessageInternal(MSG* pMsg) {
 		if (pMsg->message == WM_MOUSEMOVE && (pMsg->wParam & (m_bLeft ? MK_LBUTTON : MK_RBUTTON))) {
 			if (abs(dist.cx) > 10 || abs(dist.cy) > 10) {
 				setState(GS_None);
-				ATLTRACE(_T("Rocker Cancel\n"));
+				ATLTRACE(_T("Rocker Gesture Canceled due to mouse moved too far away\n"));
 				return MHR_Canceled;
 			} else
 				return MHR_Swallowed;
 		} else if (pMsg->message == (m_bLeft ? WM_RBUTTONDOWN : WM_LBUTTONDOWN)
 				   && (pMsg->wParam & (m_bLeft ? MK_LBUTTON : MK_RBUTTON))) {
-			ATLTRACE(_T("Rocker Trigger\n"));
+			ATLTRACE(_T("Rocker Gesture Triggered\n"));
 			setState(GS_Triggered);
 			return MHR_Triggered;
+		} else if (pMsg->message == WM_LBUTTONDOWN || pMsg->message == WM_RBUTTONDOWN
+				   || pMsg->message == WM_LBUTTONDBLCLK || pMsg->message == WM_RBUTTONDBLCLK) {
+			ATLTRACE(_T("Duplicate Rocker Gesture Initiation\n"));
+			return MHR_Discarded;
 		} else {
-			ATLTRACE(_T("Rocker Cancel\n"));
+			ATLTRACE(_T("Rocker Gesture Canceled due to message no. %x\n"), pMsg->message);
 			setState(GS_None);
 			return MHR_Canceled;
 		}
@@ -140,7 +147,7 @@ MessageHandleResult RockerHandler::handleMessageInternal(MSG* pMsg) {
 			|| (pMsg->message != (m_bLeft ? WM_RBUTTONDOWN : WM_LBUTTONDOWN)
 			&& pMsg->message != (m_bLeft ? WM_RBUTTONUP : WM_LBUTTONUP)
 			&& pMsg->message != WM_MOUSEMOVE)) {
-			ATLTRACE(_T("Rocker Up\n"));
+			ATLTRACE(_T("Rocker Gesture Ended\n"));
 			setState(GS_None);
 			return MHR_GestureEnd;
 		} else {
@@ -176,7 +183,7 @@ MessageHandleResult WheelHandler::handleMessageInternal(MSG* pMsg) {
 		if (pMsg->message == WM_RBUTTONDOWN) {
 			m_ptStart = ptCurrent;
 			setState(GS_Initiated);
-			ATLTRACE(_T("Wheel Right Down\n"));
+			ATLTRACE(_T("Wheel Gesture Initiated\n"));
 			return MHR_Initiated;
 		}
 		break;
@@ -185,16 +192,19 @@ MessageHandleResult WheelHandler::handleMessageInternal(MSG* pMsg) {
 		if (pMsg->message == WM_MOUSEMOVE && (pMsg->wParam & MK_RBUTTON)) {
 			if (abs(dist.cx) > 10 || abs(dist.cy) > 10) {
 				setState(GS_None);
-				ATLTRACE(_T("Wheel Right Cancel\n"));
+				ATLTRACE(_T("Wheel Gesture Canceled due to mouse moved too far away\n"));
 				return MHR_Canceled;
 			} else
 				return MHR_Swallowed;
 		} else if (pMsg->message == WM_MOUSEWHEEL && (pMsg->wParam & MK_RBUTTON)) {
-			ATLTRACE(_T("Wheel Trigger\n"));
+			ATLTRACE(_T("Wheel Gesture Triggered\n"));
 			setState(GS_Triggered);
 			return MHR_Triggered;
+		} else if (pMsg->message == WM_RBUTTONDOWN || pMsg->message == WM_RBUTTONDBLCLK) {
+			ATLTRACE(_T("Duplicate Wheel Gesture Initiation\n"));
+			return MHR_Discarded;
 		} else {
-			ATLTRACE(_T("Wheel Right Cancel\n"));
+			ATLTRACE(_T("Wheel Gesture Canceled due to message no. %x\n"), pMsg->message);
 			setState(GS_None);
 			return MHR_Canceled;
 		}
@@ -203,7 +213,7 @@ MessageHandleResult WheelHandler::handleMessageInternal(MSG* pMsg) {
 		if ((pMsg->message == WM_MOUSEMOVE || pMsg->message == WM_MOUSEWHEEL) && (pMsg->wParam & MK_RBUTTON)) {
 			return MHR_Swallowed;
 		} else {
-			ATLTRACE(_T("Wheel Right Up\n"));
+			ATLTRACE(_T("Wheel Gesture Ended\n"));
 			setState(GS_None);
 			return MHR_GestureEnd;
 		}

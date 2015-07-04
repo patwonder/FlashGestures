@@ -264,27 +264,24 @@ bool ForwardFirefoxMouseMessage(HWND hwndFirefox, MSG* pMsg) {
 
 	// Check if we could trigger a mouse guesture.
 	bool bShouldSwallow = false;
-	for (std::vector<GestureHandler*>::const_iterator iter = handlers.begin();
-		 iter != handlers.end(); ++iter) {
-		MessageHandleResult res = (*iter)->handleMessage(pMsg);
-		bShouldSwallow = bShouldSwallow || (*iter)->shouldSwallow(res);
+	for (GestureHandler* handler: handlers) {
+		MessageHandleResult res = handler->handleMessage(pMsg);
+		bShouldSwallow = bShouldSwallow || handler->shouldSwallow(res);
 		if (res == MHR_Triggered) {
-			(*iter)->forwardAllTarget(pMsg->hwnd, hwndFirefox);
+			handler->forwardAllTarget(pMsg->hwnd, hwndFirefox);
 			break;
 		} else if (res == MHR_Canceled) {
 			bool bShouldForwardBack = true;
-			for (std::vector<GestureHandler*>::const_iterator iter2 = handlers.begin();
-				 iter2 != handlers.end(); ++iter2) {
-				if ((*iter2)->getState() != GS_None) {
+			for (const GestureHandler* h : handlers) {
+				if (h->getState() != GS_None) {
 					bShouldForwardBack = false;
 					break;
 				}
 			}
 			if (bShouldForwardBack) {
-				(*iter)->forwardAllOrigin(pMsg->hwnd);
-				for (std::vector<GestureHandler*>::const_iterator iter2 = handlers.begin();
-					 iter2 != handlers.end(); ++iter2) {
-					(*iter2)->reset();
+				handler->forwardAllOrigin(pMsg->hwnd);
+				for (GestureHandler* h : handlers) {
+					h->reset();
 				}
 			}
 		}

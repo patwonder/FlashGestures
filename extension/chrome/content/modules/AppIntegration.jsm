@@ -503,7 +503,6 @@ function onFocus(event) {
   
   let target = event.target;
   if (target instanceof Ci.nsIObjectLoadingContent && hasRunningPlugin(target)) {
-    Utils.LOG("Fixing window focus...");
     Hook.blurAndFocus(target);
   }
 }

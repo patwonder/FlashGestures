@@ -18,7 +18,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 enum MessageHandleResult {
-	MHR_NotHandled, MHR_Initiated, MHR_Swallowed, MHR_Triggered, MHR_Canceled, MHR_GestureEnd
+	MHR_NotHandled, MHR_Initiated, MHR_Swallowed, MHR_Discarded, MHR_Triggered, MHR_Canceled, MHR_GestureEnd
 };
 
 enum GestureState {

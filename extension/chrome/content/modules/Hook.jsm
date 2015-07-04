@@ -43,6 +43,8 @@ let RestoreFocusedWindow = null;
 let IsTopLevelWindowFocused = null;
 
 let initialized = false;
+let hookAndBlurTimeout = null;
+let hookAndBlurScheduled = false;
 
 let Hook = {
   get initialized() {
@@ -109,10 +111,9 @@ let Hook = {
     initialized = false;
   },
   
-  blurAndFocus: function(embedObject) {
-    if (!initialized)
-      return;
-    
+  _blurAndFocusCore: function(embedObject) {
+    Utils.LOG("Fixing window focus...");
+
     let isWindowedPlugin = !IsTopLevelWindowFocused();
     
     if (isWindowedPlugin) {
@@ -125,5 +126,24 @@ let Hook = {
         embedObject.blur();
       }, this);
     }
+  },
+  
+  blurAndFocus: function(embedObject) {
+    if (!initialized)
+      return;
+    
+    if (hookAndBlurTimeout) {
+      hookAndBlurScheduledTarget = embedObject;
+      return;
+    }
+    
+    this._blurAndFocusCore(embedObject);
+    
+    hookAndBlurScheduledTarget = null;
+    hookAndBlurTimeout = Utils.runAsyncTimeout(function() {
+      hookAndBlurTimeout = null;
+      if (hookAndBlurScheduledTarget)
+        this.blurAndFocus(hookAndBlurScheduledTarget);
+    }, this, 100);
   },
 };

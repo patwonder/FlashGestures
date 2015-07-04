@@ -82,11 +82,11 @@ void GestureHandler::reset() {
 }
 
 bool GestureHandler::shouldKeepTrack(MessageHandleResult res) const {
-	return m_state == GS_Initiated || res == MHR_Triggered || res == MHR_Canceled;
+	return (m_state == GS_Initiated && res != MHR_Discarded) || res == MHR_Triggered || res == MHR_Canceled;
 }
 
 bool GestureHandler::shouldSwallow(MessageHandleResult res) const {
-	return shouldKeepTrack(res);
+	return m_state == GS_Initiated || res == MHR_Triggered || res == MHR_Canceled;
 }
 
 MessageHandleResult GestureHandler::handleMessage(MSG* msg) {
