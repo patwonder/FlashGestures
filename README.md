@@ -1,3 +1,9 @@
+Project discontinued
+=============================
+Due to plugin sandboxing introduced in Firefox 41, Flash Gestures is no longer compatible with Firefox 41 or higher. Workarounds are complex, and since [Mozilla is actively trying to get rid of NPAPI plugins](https://blog.mozilla.org/futurereleases/2015/10/08/npapi-plugins-in-firefox/), I don't want to continue support plugins either. Hence discontinuing this project.
+
+=================================================================================
+
 Goal
 =============================
 Resolve mouse gestures and hotkeys usability problem on plugins like Adobe Flash.
